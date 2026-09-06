@@ -1,6 +1,6 @@
 {
   "artboards": [
-    { "file": "Main.dc.html", "x": 0, "y": 0, "w": 390, "h": 844, "title": "Menu — 3 onglets (cliquable)", "is_interactive": true },
+    { "file": "Main.dc.html", "x": 0, "y": 0, "w": 390, "h": 844, "title": "Menu — 5 onglets (cliquable)", "is_interactive": true },
     { "file": "Reglages.dc.html", "x": 490, "y": 0, "w": 390, "h": 844, "title": "Paramètres" },
     { "file": "FicheDieu.dc.html", "x": 980, "y": 0, "w": 390, "h": 844, "title": "Fiche d'un dieu" }
   ],
@@ -10,7 +10,7 @@
       "x": 0,
       "y": -150,
       "w": 390,
-      "text": "Les quatre onglets sont cliquables : Olympe, Jouer (en deuxieme), Passe de combat, Boutique.\nFond = assets/wallpaper.jpg : UNE image panoramique (27:16) répartie sur les trois onglets, pas trois exemplaires. Couleurs, prix et capacités viennent de roster.ts et store.ts (M12)."
+      "text": "Les cinq onglets sont cliquables : Quêtes, Olympe, Jouer (au milieu), Passe, Boutique.\nLe bandeau du haut et la barre d'onglets du bas courent chacun sur toute la largeur de l'appli, collés aux deux bords de l'écran (TopBar.tsx, TabBar de MenuScreen.tsx). Le temple dessiné (temple_cadre.png) encadre l'écran ENTIER sur tous les onglets sauf « Jouer ». Fond = wallpaper1.png (Jouer) et wallpaper2.png (les quatre autres). Couleurs, prix et capacités viennent de roster.ts et store.ts (M12)."
     },
     {
       "id": "note-reglages",
