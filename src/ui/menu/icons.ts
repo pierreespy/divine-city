@@ -44,6 +44,31 @@ export const ICONS = {
 export const ART = {
   /** Le cadre de parchemin du bandeau de ligue. Vide, à dessein. */
   ligue: require('../../../assets/ui/ligue.png') as ImageSourcePropType,
+  /**
+   * Le bandeau du haut, DESSINÉ EN ENTIER : l'anneau du portrait, la
+   * languette du nom, les deux bourses et leurs boutons « + ». L'écran ne
+   * pose que les valeurs et les zones cliquables par-dessus (voir `TopBar`).
+   *
+   * ⚠️ Son bas est TRANSPARENT — le médaillon du portrait descend plus bas
+   * que la barre de pierre, et l'image réserve la place. D'où deux hauteurs
+   * dans `TopBar` : celle de la barre, et celle du dessin entier.
+   */
+  bandeau: require('../../../assets/ui/bandeau2.png') as ImageSourcePropType,
+  /**
+   * Le temple qui encadre une page : ciel, fronton, colonnes et socle. Il
+   * porte SON PROPRE décor, et remplace donc le papier peint sur les quatre
+   * onglets encadrés. Le titre de l'onglet s'écrit dans sa tablette.
+   */
+  maquette: require('../../../assets/ui/maquette.png') as ImageSourcePropType,
+  /**
+   * La barre d'onglets ENTIÈRE : les cinq dalles, icône et libellé compris,
+   * dans l'ordre du ruban. L'écran ne pose que les zones cliquables et la
+   * lueur de l'onglet actif.
+   *
+   * ⚠️ C'est un JPEG, et c'est normal : la frise est pleine largeur et
+   * opaque, elle n'a rien à laisser voir derrière elle.
+   */
+  onglets: require('../../../assets/ui/onglets.jpg') as ImageSourcePropType,
   /** Les dunes et leur chimère, sur la carte de la course. */
   course: require('../../../assets/ui/course.png') as ImageSourcePropType,
   /** Les combattants sous l'orage, sur la carte de l'arène. */

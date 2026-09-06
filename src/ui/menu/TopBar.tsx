@@ -10,45 +10,75 @@
  * c'est ce qui permet d'appuyer sur « + » sans se demander sur quel onglet on
  * se trouve.
  *
- * ⚠️ Il occupe TOUT le haut de l'écran, de son bord supérieur au décor : il
- * porte lui-même la marge de la barre d'état (l'écran ne la réserve plus, voir
- * `MenuScreen`), et il ne laisse RIEN sous lui. C'est ce qui colle le bas du
- * cadre au haut du papier peint, sans bande claire entre les deux.
+ * ⚠️ Le bandeau est DESSINÉ, pas composé (`assets/ui/bandeau2.png`) : l'anneau
+ * du portrait, la languette du nom, les deux bourses avec leur jeton et leur
+ * bouton « + », et la plaque du niveau sont tous dans l'image. L'écran ne pose
+ * QUE ce que le dessin ne peut pas savoir — le nom du dieu choisi, les deux
+ * montants, le rang, le portrait — plus les zones cliquables par-dessus les
+ * deux « + ».
  *
- * ⚠️ TOUT tient sur UNE SEULE ligne, et c'est ce qui garde la bande basse :
- * le nom se lit À CÔTÉ du portrait, pas dessous, et la plaque de niveau
- * DÉBORDE sur le décor au lieu d'épaissir la bande.
+ * ⚠️ Toutes les positions ci-dessous sont donc des FRACTIONS DE LA LARGEUR de
+ * l'écran, mesurées sur le dessin, et non des points. Le bandeau est étiré
+ * d'un bord à l'autre en gardant ses proportions : ce qui est vrai à 390
+ * points de large l'est à 768. Elles cessent de l'être dès que le dessin
+ * change, et il faut alors les re-mesurer, sinon les montants sortent de leur
+ * bourse.
  */
 
-import { useState } from 'react';
-import { Image, ImageBackground, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Image, Pressable, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { godById } from '../../entities/gods/roster';
 import { flatColorOf, type Progression } from '../../meta/progression';
 import { rankOf } from '../../meta/rank';
-import { CurrencyPill, GodBadge } from './parts';
+import { GodBadge } from './parts';
 import { ART, PORTRAITS } from './icons';
-import { COLORS, RADIUS, SPACE, TOUCH_MIN, TYPE } from './theme';
-
-/** Le diamètre du médaillon du dieu. Il est plus haut que la bande. */
-const AVATAR = 56;
+import { COLORS, RADIUS, SPACE, TEXT_SHADOW, TYPE } from './theme';
 
 /**
- * La place réservée au médaillon dans la ligne, en points.
+ * Les proportions du dessin (2170 × 725 pixels), en fractions de sa LARGEUR.
  *
- * Le médaillon est HORS FLUX : il ne pousse donc rien devant lui, et sans
- * cette réserve le nom du dieu viendrait se lire par-dessus son visage.
+ * `art`  la hauteur de l'image entière ;
+ * `bar`  celle de la barre de pierre OPAQUE — le reste du dessin, sous elle,
+ *        n'est que le médaillon du portrait et sa plaque, sur fond
+ *        transparent. C'est `bar` qui donne sa hauteur au bandeau : le décor
+ *        commence juste dessous, et le médaillon lui passe par-dessus.
  */
-const AVATAR_SLOT = SPACE.md + AVATAR + SPACE.sm;
+const ART_HEIGHT = 725 / 2170;
+const BAR_HEIGHT = 306 / 2170;
 
 /**
- * La hauteur de la ligne tant qu'elle n'est pas mesurée, en points.
- *
- * Elle ne sert qu'à la première image, avant que `onLayout` ne réponde : sans
- * elle, le cadre se poserait entier le temps d'une image, et l'on verrait son
- * haut sauter.
+ * Ce que l'écran pose sur le dessin, en fractions de la largeur de l'écran.
+ * Mesuré sur `bandeau2.png`, boîte par boîte — voir l'avertissement du
+ * haut de fichier.
  */
-const BAR_GUESS = 58;
+const SLOTS = {
+  /** La languette gravée du nom du dieu. */
+  name: { left: 161 / 768, top: 29 / 768, width: 160 / 768, height: 56 / 768 },
+  /** Le champ sombre de la bourse d'or, entre son jeton et son « + ». */
+  gold: { left: 412 / 768, top: 20 / 768, width: 97 / 768, height: 59 / 768 },
+  /** Le même, pour les lauriers. */
+  laurels: { left: 624 / 768, top: 24 / 768, width: 96 / 768, height: 56 / 768 },
+  /** Les deux boutons « + », DESSINÉS : on ne pose que la zone cliquable. */
+  addGold: { left: 516 / 768, top: 38 / 768, width: 28 / 768, height: 27 / 768 },
+  addLaurels: { left: 726 / 768, top: 39 / 768, width: 27 / 768, height: 25 / 768 },
+  /** La plaque du niveau, sous le médaillon — elle déborde sur le décor. */
+  level: { left: 38 / 768, top: 117 / 768, width: 92 / 768, height: 33 / 768 },
+} as const;
+
+/**
+ * Le portrait, DANS l'anneau déjà dessiné : le centre de l'anneau, et le
+ * diamètre de son intérieur.
+ *
+ * ⚠️ C'est l'INTÉRIEUR qu'on mesure, pas l'anneau : un portrait au diamètre
+ * de l'anneau recouvrirait le cerclage de bois qui fait tout le médaillon.
+ */
+const PORTRAIT = { x: 0.1076, y: 0.0839, size: 0.12 };
+
+/** Les tailles de texte du bandeau, elles aussi en fractions de la largeur. */
+const TEXT = { name: 25 / 768, purse: 24 / 768, level: 16 / 768 };
+
+/** La place du bouton des réglages, que le dessin ne prévoit pas. */
+const GEAR = 34;
 
 export function TopBar({
   state,
@@ -64,226 +94,176 @@ export function TopBar({
   const rank = rankOf(state.bestScore);
   const portrait = PORTRAITS[state.selectedGod];
 
-  // Le bandeau monte SOUS la barre d'état : c'est lui qui en porte la marge,
-  // et le cadre couvre donc le haut de l'écran jusqu'à son bord.
+  const { width } = useWindowDimensions();
+  const w = Math.max(1, Math.round(width));
+  const barHeight = w * BAR_HEIGHT;
+
+  // La barre d'état ne reçoit PAS le dessin : elle reçoit le bois du bandeau,
+  // qui la prolonge. Étirer la pierre sous l'encoche déformerait le fronton
+  // du dessin, et la couper laisserait une bande claire au-dessus.
   const insets = useSafeAreaInsets();
 
-  // La hauteur de la ligne, MESURÉE : elle dépend de la police et de la
-  // taille de texte du système, et le rognage se calcule dessus.
-  const [barHeight, setBarHeight] = useState(0);
-
-  /**
-   * La hauteur du cadre qui passe AU-DESSUS de l'écran, en points.
-   *
-   * Le dessin est un cadre fermé, avec un haut et un bas ; posé entier, il
-   * ferait une bande bien trop haute pour ce qu'elle porte. On le monte donc
-   * et on rogne ce qui dépasse : il ne reste que le bas et les deux montants.
-   *
-   * ⚠️ Le facteur est MESURÉ sur le dessin, pas choisi : la ferrure haute de
-   * `ligue.png` (512 × 119) occupe un SIXIÈME de sa hauteur, et le cadre est
-   * étiré sur la partie visible PLUS ce rognage. Rogner exactement ce
-   * sixième-là — soit un cinquième du visible — fait disparaître le haut du
-   * cadre et RIEN de plus : au-delà, on entame l'intérieur et les
-   * informations du joueur se retrouvent hors du cadre.
-   */
-  const visible = insets.top + (barHeight || BAR_GUESS);
-  const crop = Math.round(visible / 5);
+  /** Une boîte du dessin, ramenée en points. */
+  const box = (slot: { left: number; top: number; width: number; height: number }) => ({
+    position: 'absolute' as const,
+    left: slot.left * w,
+    top: slot.top * w,
+    width: slot.width * w,
+    height: slot.height * w,
+  });
 
   return (
-    <View style={styles.root}>
-      {/* ⚠️ Le MÊME cadre dessiné que la carte de la course sacrée et que le
-          bandeau de ligue (`ART.ligue`) : les deux bourses, le nom du dieu et
-          le bouton des réglages tiennent DEDANS. Il est étiré, ce que ce
-          dessin supporte — il n'a pas de sujet, juste des coins ferrés.
-
-          ⚠️ Il est ROGNÉ PAR LE HAUT : une marge haute négative le fait sortir
-          de l'écran, et l'enveloppe qui coupe (`overflow: 'hidden'`) en efface
-          la partie qui dépasse. La marge intérieure haute rend à la ligne la
-          place que la marge négative lui prend — sans elle, c'est le contenu
-          qui serait coupé, pas le dessin — et elle y ajoute la barre d'état,
-          que le cadre recouvre.
-
-          ⚠️ C'est cette enveloppe-ci qui coupe, PAS le bandeau entier : le
-          médaillon, lui, doit pouvoir déborder dessous.
-
-          ⚠️ Le conteneur du cadre n'a aucune marge intérieure horizontale :
-          elle est descendue dans `bar`. Le dessin de fond est un enfant hors
-          flux tiré aux quatre bords, et sa largeur « 100 % » ne se mesure pas
-          sur la même boîte partout — le web la prend marge comprise, Yoga la
-          prend marge déduite. Une marge ici donnerait un cadre plein écran
-          sur le web et un cadre rentré vers la gauche sur le téléphone. Et
-          `resizeMode` est en PROP autant qu'en style : le style seul
-          n'atteint pas l'image sur iOS. */}
-      <View style={styles.clip}>
-        <ImageBackground
-          source={ART.ligue}
-          style={[styles.frame, { marginTop: -crop, paddingTop: crop + insets.top }]}
-          imageStyle={styles.frameSkin}
-          resizeMode="stretch"
+    <View style={[styles.root, { paddingTop: insets.top }]}>
+      {/* ⚠️ La hauteur de cette boîte est celle de la BARRE, pas celle du
+          dessin : le médaillon et la plaque du niveau en débordent par le
+          bas, et c'est ce débordement qui les fait lire comme épinglés sur
+          le décor plutôt que rangés dans le bandeau. Rien ne coupe ici —
+          `overflow` reste au défaut. */}
+      <View style={{ height: barHeight }}>
+        {/* ⚠️ L'enveloppe ne sert QU'À laisser passer le doigt : le bas du
+            dessin est transparent, il déborde sur le décor, et sans
+            `pointerEvents` cette moitié invisible avalerait le glissement du
+            ruban sur toute sa hauteur. */}
+        <View
+          pointerEvents="none"
+          style={{ position: 'absolute', left: 0, top: 0, width: w, height: w * ART_HEIGHT }}
         >
-          <View
-            style={styles.bar}
-            onLayout={(event) => setBarHeight(event.nativeEvent.layout.height)}
-          >
-            {/* Le nom sur sa languette, à hauteur des bourses : c'est la
-                première chose que l'on lit, et elle appartient au portrait
-                posé juste à sa gauche. */}
-            <View style={styles.nameTab}>
-              <Text style={styles.name} numberOfLines={1}>
-                {god.label}
-              </Text>
-            </View>
-
-            <View style={styles.purse}>
-              <CurrencyPill
-                testID="gold"
-                tone="gold"
-                value={state.gold}
-                hint="Ouvrir la boutique, rayon or"
-                onAdd={onOpenShop}
-              />
-              <CurrencyPill
-                testID="laurels"
-                tone="laurel"
-                value={state.laurels}
-                hint="Ouvrir la boutique, rayon lauriers"
-                onAdd={onOpenShop}
-              />
-            </View>
-
-            <Pressable
-              testID="settings"
-              onPress={onOpenSettings}
-              accessibilityRole="button"
-              accessibilityLabel="Paramètres"
-              hitSlop={6}
-              style={({ pressed }) => [styles.burger, pressed && styles.burgerPressed]}
-            >
-              <Text style={styles.burgerLines}>≡</Text>
-            </Pressable>
-          </View>
-        </ImageBackground>
-      </View>
-
-      {/* ⚠️ Le médaillon est HORS FLUX, et posé APRÈS le cadre : il se dessine
-          donc par-dessus, et il déborde sur le décor — c'est ce débordement
-          qui fait lire le portrait comme épinglé sur le bandeau plutôt que
-          rangé dedans. La ligne, elle, lui garde sa place avec `AVATAR_SLOT`. */}
-      <View style={[styles.avatarWrap, { top: insets.top }]} pointerEvents="none">
-        {/* Le portrait porte SON PROPRE anneau d'or, dessiné dans l'image :
-            posé dans le cadre du médaillon, il en ferait un second. D'où deux
-            habillages, selon qu'un dieu a son visage ou seulement ses deux
-            couleurs. */}
-        {portrait === undefined ? (
-          <View style={styles.avatar}>
-            <GodBadge color={appearance.color} accent={appearance.accent} size={42} />
-          </View>
-        ) : (
           <Image
-            source={portrait}
-            resizeMode="contain"
-            style={styles.portrait}
+            source={ART.bandeau}
+            // Le dessin est posé à sa PROPRE proportion (`stretch` sur une
+            // boîte déjà juste ne déforme rien) : le déformer tordrait les
+            // deux bourses, qui sont des objets, pas un fond.
+            resizeMode="stretch"
             accessible={false}
             importantForAccessibility="no"
+            style={{ width: w, height: w * ART_HEIGHT }}
           />
-        )}
-        {/* La plaque de niveau chevauche le bas du portrait : elle appartient
-            au médaillon, elle ne se lit pas comme une deuxième information. */}
-        <View style={styles.levelPlate}>
-          <Text style={styles.levelText}>Niv {rank.level}</Text>
         </View>
+
+        <View style={[box(SLOTS.name), styles.slot]} pointerEvents="none">
+          <Text style={[styles.name, { fontSize: TEXT.name * w }]} numberOfLines={1}>
+            {god.label}
+          </Text>
+        </View>
+
+        <View style={[box(SLOTS.gold), styles.slot]} pointerEvents="none">
+          <Text style={[styles.purse, { fontSize: TEXT.purse * w }]} testID="gold" numberOfLines={1}>
+            {state.gold.toLocaleString('fr-FR')}
+          </Text>
+        </View>
+
+        <View style={[box(SLOTS.laurels), styles.slot]} pointerEvents="none">
+          <Text
+            style={[styles.purse, { fontSize: TEXT.purse * w }]}
+            testID="laurels"
+            numberOfLines={1}
+          >
+            {state.laurels.toLocaleString('fr-FR')}
+          </Text>
+        </View>
+
+        {/* Les deux « + » sont dessinés : la zone cliquable ne peint rien,
+            elle se contente de couvrir le bouton de l'image. `hitSlop` la
+            porte à la taille du pouce sans l'agrandir à l'œil — le dessin
+            fait moins de vingt points de côté sur un téléphone. */}
+        <Pressable
+          onPress={onOpenShop}
+          accessibilityRole="button"
+          accessibilityLabel="Ouvrir la boutique, rayon or"
+          hitSlop={12}
+          style={({ pressed }) => [box(SLOTS.addGold), pressed && styles.hotPressed]}
+        />
+        <Pressable
+          onPress={onOpenShop}
+          accessibilityRole="button"
+          accessibilityLabel="Ouvrir la boutique, rayon lauriers"
+          hitSlop={12}
+          style={({ pressed }) => [box(SLOTS.addLaurels), pressed && styles.hotPressed]}
+        />
+
+        {/* Le portrait, posé dans l'anneau du dessin. Il ne porte pas de
+            cadre : l'anneau en est déjà un, et un second se lirait comme une
+            bavure. D'où deux habillages selon qu'un dieu a son visage ou
+            seulement ses deux couleurs. */}
+        <View
+          pointerEvents="none"
+          style={{
+            position: 'absolute',
+            left: (PORTRAIT.x - PORTRAIT.size / 2) * w,
+            top: (PORTRAIT.y - PORTRAIT.size / 2) * w,
+            width: PORTRAIT.size * w,
+            height: PORTRAIT.size * w,
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          {portrait === undefined ? (
+            <GodBadge color={appearance.color} accent={appearance.accent} size={PORTRAIT.size * w} />
+          ) : (
+            <Image
+              source={portrait}
+              resizeMode="contain"
+              style={{ width: PORTRAIT.size * w, height: PORTRAIT.size * w }}
+              accessible={false}
+              importantForAccessibility="no"
+            />
+          )}
+        </View>
+
+        <View style={[box(SLOTS.level), styles.slot]} pointerEvents="none">
+          <Text style={[styles.level, { fontSize: TEXT.level * w }]} numberOfLines={1}>
+            Niv {rank.level}
+          </Text>
+        </View>
+
+        {/* ⚠️ Les réglages n'ont PAS de place dans le dessin : les deux
+            bourses tiennent le bandeau d'un bout à l'autre. On les accroche
+            donc au bord inférieur, à droite — le pendant du médaillon, qui
+            déborde de la même façon à gauche. */}
+        <Pressable
+          testID="settings"
+          onPress={onOpenSettings}
+          accessibilityRole="button"
+          accessibilityLabel="Paramètres"
+          hitSlop={8}
+          style={({ pressed }) => [
+            styles.gear,
+            { top: barHeight - GEAR / 2 },
+            pressed && styles.gearPressed,
+          ]}
+        >
+          <Text style={styles.gearLines}>≡</Text>
+        </Pressable>
       </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  // ⚠️ Le bandeau NE COUPE PAS : c'est `clip` qui s'en charge, un cran plus
-  // bas.
+  // ⚠️ `zIndex` : le médaillon, la plaque de niveau et le bouton des réglages
+  // débordent SUR le décor, qui est un frère dessiné APRÈS le bandeau. Sans
+  // ce relief, ils passeraient dessous et seraient tout simplement invisibles.
   //
-  // ⚠️ Et il n'a AUCUNE marge, ni haute ni basse : le haut du cadre part du
-  // bord de l'écran, son bas touche le haut du décor. Une marge ici laissait
-  // une bande de fond clair entre les deux — le « vide blanc ».
-  //
-  // ⚠️ `zIndex` : la plaque de niveau déborde SUR le décor, qui est un frère
-  // dessiné APRÈS le bandeau. Sans ce relief, elle passerait dessous et
-  // serait tout simplement invisible.
-  root: { position: 'relative', zIndex: 2 },
+  // ⚠️ Le fond n'est pas décoratif : il prolonge le bois du bandeau sous la
+  // barre d'état, là où le dessin ne monte pas.
+  root: { position: 'relative', zIndex: 2, backgroundColor: COLORS.bar },
 
-  clip: { overflow: 'hidden' },
+  /** Toute boîte posée sur le dessin centre son contenu, sans rien peindre. */
+  slot: { alignItems: 'center', justifyContent: 'center' },
 
-  // ⚠️ SANS marge intérieure horizontale — elle appartient à `bar`, un cran
-  // plus bas (voir le commentaire du rendu) : le dessin de fond se mesure sur
-  // ce conteneur-ci, et une marge latérale le rétrécirait sur téléphone.
-  // Les marges verticales, elles, sont calculées au rendu : elles dépendent
-  // de la barre d'état et de la hauteur mesurée de la ligne.
-  frame: { justifyContent: 'flex-end' },
-  // Sans `width`/`height`, l'image garderait sa taille NATIVE — 512 points de
-  // large — et sortirait du cadre par la droite ; `stretch` est répété ici
-  // parce que le style n'atteint pas l'image sur iOS et la prop ne l'atteint
-  // pas sur le web. Pas de coins arrondis : ils se liraient au milieu de
-  // l'écran, là où le dessin est coupé.
-  frameSkin: { width: '100%', height: '100%', resizeMode: 'stretch' },
+  name: { fontFamily: TYPE.title.fontFamily, color: COLORS.text },
+  // Les deux montants se lisent sur le champ SOMBRE des bourses : ils sont
+  // clairs, et leur ombre les décolle du bois.
+  purse: { fontFamily: TYPE.price.fontFamily, color: COLORS.onDark, ...TEXT_SHADOW },
+  level: { fontFamily: TYPE.tiny.fontFamily, letterSpacing: 0.5, color: COLORS.onDark, ...TEXT_SHADOW },
 
-  // ⚠️ La marge BASSE n'est pas décorative : la ferrure basse du dessin mord
-  // sur un sixième de la hauteur du cadre. En deçà, les bourses viendraient
-  // se poser DESSUS au lieu de se lire dans le cadre.
-  bar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: SPACE.sm,
-    paddingLeft: AVATAR_SLOT,
-    paddingRight: SPACE.md,
-    paddingTop: SPACE.xs,
-    paddingBottom: SPACE.md + SPACE.xs,
-  },
+  hotPressed: { opacity: 0.55 },
 
-  // Le médaillon descend plus bas que la bande : il commence sous la barre
-  // d'état (`top`, posé au rendu) et sa plaque de niveau tombe sur le décor.
-  avatarWrap: { position: 'absolute', left: SPACE.md, alignItems: 'center' },
-  avatar: {
-    width: AVATAR,
-    height: AVATAR,
-    borderRadius: AVATAR / 2,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: COLORS.panelRaised,
-    borderWidth: 3,
-    borderColor: COLORS.gold,
-  },
-  // Le portrait remplace le cadre, il ne s'y ajoute pas : même diamètre que
-  // le médaillon de couleurs, pour que le bandeau garde sa hauteur quel que
-  // soit le dieu choisi.
-  portrait: { width: AVATAR, height: AVATAR },
-
-  levelPlate: {
-    marginTop: -8,
-    paddingHorizontal: SPACE.sm,
-    paddingVertical: 1,
-    borderRadius: RADIUS.sm,
-    backgroundColor: COLORS.bar,
-    borderWidth: 1.5,
-    borderColor: COLORS.gold,
-  },
-  levelText: { ...TYPE.tiny, color: COLORS.onDark },
-
-  // La languette du nom : la même bordure d'or que les bourses, pour qu'elle
-  // se lise comme une pièce de la même ligne.
-  nameTab: {
-    paddingHorizontal: SPACE.md,
-    paddingVertical: SPACE.xs,
-    borderRadius: RADIUS.pill,
-    backgroundColor: COLORS.bar,
-    borderWidth: 2,
-    borderColor: COLORS.gold,
-  },
-  name: { ...TYPE.title, fontSize: 14, color: COLORS.onDark },
-
-  purse: { flex: 1, flexDirection: 'row', justifyContent: 'flex-end', gap: SPACE.sm },
-
-  burger: {
-    width: TOUCH_MIN - 6,
-    height: TOUCH_MIN - 6,
+  gear: {
+    position: 'absolute',
+    right: SPACE.md,
+    width: GEAR,
+    height: GEAR,
     borderRadius: RADIUS.pill,
     alignItems: 'center',
     justifyContent: 'center',
@@ -291,6 +271,6 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: COLORS.gold,
   },
-  burgerPressed: { opacity: 0.8, transform: [{ scale: 0.94 }] },
-  burgerLines: { ...TYPE.display, fontSize: 24, color: COLORS.onDark, lineHeight: 30 },
+  gearPressed: { opacity: 0.8, transform: [{ scale: 0.94 }] },
+  gearLines: { ...TYPE.display, fontSize: 20, color: COLORS.onDark, lineHeight: 26 },
 });

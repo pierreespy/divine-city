@@ -24,6 +24,30 @@ trois onglets de `Main.dc.html` :
 
 `Reglages.dc.html` et `FicheDieu.dc.html` n'ont pas été retouchés.
 
+**2026-09-06 — mise en place** : les trois dessins ci-dessus sont désormais
+DANS l'app, et l'onglet des quêtes suit la planche « Quêtes et défis
+célestes » :
+
+- `bandeau2.png` remplace le cadre de ligue dans `TopBar.tsx`. Le dessin
+  porte l'anneau du portrait, la languette du nom, les deux bourses et
+  leurs boutons « + » ; l'écran ne pose que les valeurs, le portrait, le
+  rang et les zones cliquables, en fractions de la largeur mesurées sur
+  l'image ;
+- `onglets.jpg` remplace la barre composée de `MenuScreen.tsx`. Le
+  médaillon « Jouer » en relief a DISPARU : le dessin traite les cinq
+  dalles à égalité, et l'onglet actif se marque par une lueur chaude qui
+  suit le doigt ;
+- `maquette.png` remplace `temple_cadre.png` sur les quatre onglets
+  encadrés. Il porte son propre ciel, et recouvre donc `wallpaper2.png`,
+  qui reste le décor de « Jouer » et ce qui glisse entre deux onglets.
+
+Ce que la planche des quêtes montre et que le jeu ne sait pas encore
+faire — la rotation quotidienne et hebdomadaire, le versement des
+récompenses — est annoncé plutôt qu'inventé : les compteurs se déduisent
+toujours de la sauvegarde, et le bouton « Récupérer » reste éteint tant
+qu'aucun système ne peut accorder quoi que ce soit (voir l'en-tête de
+`QuetesTab.tsx`).
+
 ## Les fichiers
 
 | Fichier | Écran |
@@ -60,10 +84,6 @@ mêmes que `theme.ts` (`FONTS`).
 
 ## Ce qui reste à décider
 
-- `bandeau2.png`, `maquette.png` et `onglets.jpg` ne sont pour l'instant
-  QUE dans la maquette : le menu codé (`TopBar.tsx`, `MenuScreen.tsx`,
-  `icons.ts`) utilise encore `ligue.png` et `temple_cadre.png`. Les
-  brancher dans l'app est un travail à part, pas fait ici.
 - Les icônes d'onglet et les médaillons de quartier sont posés en émoji
   dans l'onglet Jouer, là où le code embarque de vraies images
   (`icons.ts`, `DISTRICT_ICONS`) : suffisant pour juger la disposition,

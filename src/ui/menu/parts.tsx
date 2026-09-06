@@ -26,7 +26,7 @@ import {
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { ART, ICONS } from './icons';
-import { COLORS, FONTS, RADIUS, SPACE, TOUCH_MIN, TYPE, hex } from './theme';
+import { COLORS, FONTS, RADIUS, SPACE, TEXT_SHADOW, TOUCH_MIN, TYPE, hex } from './theme';
 
 /* ------------------------------------------------------------------ cadres */
 
@@ -80,9 +80,19 @@ export function Plaque({
   );
 }
 
-/** Un intitulé de section : petites capitales espacées, sans tablette. */
-export function SectionTitle({ children }: { children: string }) {
-  return <Text style={styles.sectionTitle}>{children.toUpperCase()}</Text>;
+/**
+ * Un intitulé de section : des capitales gravées, sans tablette.
+ *
+ * `large` est réservé aux sections qui DÉCOUPENT un onglet en parties — les
+ * quêtes du jour et celles de la semaine — là où la taille normale ne fait
+ * qu'annoncer une rangée de plus dans une liste continue.
+ */
+export function SectionTitle({ children, large = false }: { children: string; large?: boolean }) {
+  return (
+    <Text style={[styles.sectionTitle, large && styles.sectionTitleLarge]}>
+      {children.toUpperCase()}
+    </Text>
+  );
 }
 
 /**
@@ -136,11 +146,26 @@ export function Banner({
 
 /* ----------------------------------------------------------------- boutons */
 
+/**
+ * Les quatre matières d'un bouton, et le couple de teintes de chacune.
+ *
+ * ⚠️ Elles ne sont pas décoratives : chacune dit ce qui va se passer. L'or
+ * est l'action de l'écran, le bois tout le reste, le bleu ce qui EMMÈNE
+ * ailleurs, le vert ce qui SE PREND. Un joueur qui parcourt une liste de
+ * quêtes reconnaît ainsi d'un coup d'œil celles qui l'attendent.
+ */
+const BUTTON_TONES = {
+  primary: [COLORS.goldLight, COLORS.gold, COLORS.goldShadow, COLORS.frameDeep, COLORS.onGold],
+  ghost: [COLORS.panelRaised, COLORS.panelSunken, COLORS.frame, COLORS.frameDark, COLORS.onGold],
+  go: [COLORS.goLight, COLORS.go, COLORS.goEdge, COLORS.goEdge, COLORS.onTrough],
+  claim: [COLORS.claimLight, COLORS.claim, COLORS.claimEdge, COLORS.claimEdge, COLORS.onTrough],
+} as const;
+
 interface ButtonProps {
   label: string;
   onPress: () => void;
-  /** `primary` : l'action de l'écran. `ghost` : tout le reste. */
-  variant?: 'primary' | 'ghost';
+  /** La matière du bouton — voir `BUTTON_TONES`. */
+  variant?: keyof typeof BUTTON_TONES;
   /** Une seconde ligne, sous l'intitulé — un prix, le plus souvent. */
   price?: ReactNode;
   disabled?: boolean;
@@ -148,8 +173,12 @@ interface ButtonProps {
   hint?: string;
   testID?: string;
   style?: ViewStyle;
-  /** `big` : le bouton d'appel de l'écran, pleine largeur. */
-  size?: 'normal' | 'big';
+  /**
+   * `big` : le bouton d'appel de l'écran, pleine largeur. `small` : celui
+   * qui vit DANS une carte, à côté d'autre chose — la colonne de droite
+   * d'une quête n'a pas la largeur d'un bouton pleine taille.
+   */
+  size?: 'normal' | 'big' | 'small';
 }
 
 export function Button({
@@ -163,7 +192,7 @@ export function Button({
   style,
   size = 'normal',
 }: ButtonProps) {
-  const primary = variant === 'primary';
+  const [light, deep, edge, edgeBottom, ink] = BUTTON_TONES[variant];
   return (
     <Pressable
       testID={testID}
@@ -175,23 +204,32 @@ export function Button({
       // Le retour au toucher n'est pas cosmétique : sans lui, on ne sait pas
       // si l'appui a été pris en compte, et on appuie deux fois.
       android_ripple={{ color: 'rgba(255, 255, 255, 0.22)' }}
+      hitSlop={size === 'small' ? 10 : 0}
       style={({ pressed }) => [
         styles.button,
-        primary ? styles.buttonPrimary : styles.buttonGhost,
+        { borderColor: edge, borderBottomColor: edgeBottom },
         size === 'big' && styles.buttonBig,
+        size === 'small' && styles.buttonSmall,
         pressed && !disabled && styles.buttonPressed,
         disabled && styles.buttonDisabled,
         style,
       ]}
     >
-      {/* Le dégradé fait le bombé : clair en haut, doré en bas. Une couleur
+      {/* Le dégradé fait le bombé : clair en haut, foncé en bas. Une couleur
           plate donnerait un rectangle, pas un objet qu'on presse. */}
-      <LinearGradient
-        pointerEvents="none"
-        colors={primary ? [COLORS.goldLight, COLORS.gold] : [COLORS.panelRaised, COLORS.panelSunken]}
-        style={StyleSheet.absoluteFill}
-      />
-      <Text style={[styles.buttonLabel, size === 'big' && styles.buttonLabelBig]} numberOfLines={1}>
+      <LinearGradient pointerEvents="none" colors={[light, deep]} style={StyleSheet.absoluteFill} />
+      <Text
+        style={[
+          styles.buttonLabel,
+          { color: ink },
+          size === 'big' && styles.buttonLabelBig,
+          size === 'small' && styles.buttonLabelSmall,
+        ]}
+        numberOfLines={1}
+        // Un bouton étroit ne doit pas TRONQUER son intitulé : « RÉCUPÉ… »
+        // ne veut rien dire. Il rétrécit la lettre plutôt que de la couper.
+        adjustsFontSizeToFit
+      >
         {label.toUpperCase()}
       </Text>
       {price !== undefined && <View style={styles.buttonPrice}>{price}</View>}
@@ -345,11 +383,19 @@ export function CurrencyPill({
  */
 export function Tile({
   icon,
+  image,
   count,
   state,
   size = 52,
 }: {
-  icon: string;
+  /** Le contenu du casier, en émoji — quand aucun dessin n'existe encore. */
+  icon?: string;
+  /**
+   * Le contenu du casier, DESSINÉ. Il l'emporte sur l'émoji : une pièce d'or
+   * doit être la même partout — bourse, prix, récompense — et le tracé d'un
+   * émoji change d'un téléphone à l'autre.
+   */
+  image?: ImageSourcePropType;
   count?: number;
   state: 'taken' | 'ready' | 'locked';
   size?: number;
@@ -364,7 +410,11 @@ export function Tile({
           state === 'locked' && styles.tileLocked,
         ]}
       >
-        <Text style={{ fontSize: size * 0.5 }}>{icon}</Text>
+        {image !== undefined ? (
+          <Token source={image} size={size * 0.56} />
+        ) : (
+          <Text style={{ fontSize: size * 0.5 }}>{icon}</Text>
+        )}
         {state === 'locked' && <Text style={styles.tileLock}>🔒</Text>}
         {state === 'taken' && <Text style={styles.tileCheck}>✓</Text>}
       </View>
@@ -383,23 +433,61 @@ export function Bar({
   max,
   label,
   tone = 'gold',
+  carved = false,
+  height,
 }: {
   value: number;
   max: number;
   label?: string;
   tone?: 'gold' | 'laurel';
+  /**
+   * La gouttière CREUSÉE dans le bois sombre, et son compte écrit en blanc —
+   * celle des cartes de quête.
+   *
+   * ⚠️ Elle existe pour une raison de lisibilité, pas de goût : dans une
+   * carte de quête, la jauge est ce qu'on cherche du regard, et une coulée
+   * d'or sur un creux de parchemin clair ne se détache pas assez. Ailleurs
+   * — la piste du passe, le rang de l'onglet Jouer — la jauge accompagne un
+   * texte plutôt qu'elle ne le porte, et le creux clair suffit.
+   */
+  carved?: boolean;
+  /** La hauteur, quand la jauge doit peser plus lourd que les autres. */
+  height?: number;
 }) {
   const ratio = max <= 0 ? 0 : Math.max(0, Math.min(1, value / max));
   return (
-    <View style={styles.bar}>
+    <View style={[styles.bar, carved && styles.barCarved, height !== undefined && { height }]}>
       <LinearGradient
         colors={tone === 'gold' ? [COLORS.goldLight, COLORS.gold] : [COLORS.laurelLight, COLORS.laurel]}
         start={{ x: 0, y: 0 }}
         end={{ x: 0, y: 1 }}
         style={[styles.barFill, { width: `${ratio * 100}%` }]}
       />
-      <Text style={styles.barLabel} numberOfLines={1}>
-        {label ?? `${value} / ${max}`}
+      {label !== '' && (
+        <Text style={[styles.barLabel, carved && styles.barLabelCarved]} numberOfLines={1}>
+          {label ?? `${value} / ${max}`}
+        </Text>
+      )}
+    </View>
+  );
+}
+
+/**
+ * Le casier d'une récompense : le jeton de ce qu'on gagne, et combien.
+ *
+ * ⚠️ Le nombre est SOUS le jeton, pas à côté : deux ou trois casiers se
+ * rangent ainsi côte à côte dans la largeur d'une carte, là où des pastilles
+ * horizontales déborderaient dès la troisième.
+ */
+export function RewardSlot({ tone, amount }: { tone: 'gold' | 'laurel'; amount: number }) {
+  return (
+    <View
+      style={styles.slot}
+      accessibilityLabel={`${amount.toLocaleString('fr-FR')} ${tone === 'gold' ? 'or' : 'lauriers'}`}
+    >
+      {tone === 'gold' ? <Coin size={22} /> : <Laurel size={22} />}
+      <Text style={styles.slotAmount} numberOfLines={1}>
+        {amount.toLocaleString('fr-FR')}
       </Text>
     </View>
   );
@@ -506,6 +594,7 @@ const styles = StyleSheet.create({
     marginBottom: SPACE.sm,
     marginTop: SPACE.lg,
   },
+  sectionTitleLarge: { fontSize: 15, letterSpacing: 1, color: COLORS.text, marginTop: SPACE.sm },
 
   card: {
     backgroundColor: COLORS.panel,
@@ -533,18 +622,22 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 2,
+    // ⚠️ Le CHANT est plus épais que les trois autres côtés : c'est lui qui
+    // fait le relief. Ses couleurs, elles, viennent de la matière du bouton
+    // (`BUTTON_TONES`), posées au rendu.
     borderBottomWidth: 4,
-    borderColor: COLORS.goldShadow,
-    borderBottomColor: COLORS.frameDeep,
     overflow: 'hidden',
   },
   buttonBig: { minHeight: 62 },
-  buttonPrimary: {},
-  buttonGhost: { borderColor: COLORS.frame, borderBottomColor: COLORS.frameDark },
+  // ⚠️ Il passe SOUS les 44 points de `TOUCH_MIN` : c'est le `hitSlop` du
+  // bouton qui rend la différence, et lui seul en a besoin — les autres
+  // tailles atteignent déjà la cible.
+  buttonSmall: { minHeight: 34, paddingHorizontal: SPACE.sm },
   buttonPressed: { borderBottomWidth: 1, transform: [{ translateY: 3 }] },
   buttonDisabled: { opacity: 0.45 },
-  buttonLabel: { ...TYPE.banner, fontSize: 14, color: COLORS.onGold, textAlign: 'center' },
+  buttonLabel: { ...TYPE.banner, fontSize: 14, textAlign: 'center' },
   buttonLabelBig: { fontSize: 19 },
+  buttonLabelSmall: { fontSize: 11, letterSpacing: 0.4 },
   buttonPrice: { flexDirection: 'row', alignItems: 'center', gap: SPACE.xs, marginTop: 2 },
 
   // La plaque ne porte ni fond ni bordure : son cadre est dessiné dans
@@ -617,8 +710,33 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     justifyContent: 'center',
   },
+  // La gouttière creusée : bois sombre, cerclé de bois clair. Les coins sont
+  // à peine arrondis — une gouttière est TAILLÉE dans la planche, pas
+  // posée dessus, et une pastille ne se lit plus comme un creux.
+  barCarved: {
+    height: 30,
+    borderRadius: RADIUS.sm,
+    backgroundColor: COLORS.trough,
+    borderColor: COLORS.troughEdge,
+  },
   barFill: { position: 'absolute', left: 0, top: 0, bottom: 0 },
   barLabel: { ...TYPE.tiny, fontSize: 11, color: COLORS.text, textAlign: 'center' },
+  // Sur le bois sombre, l'encre du parchemin disparaît : le compte passe au
+  // blanc, et son ombre le décolle de la coulée d'or qu'il traverse.
+  barLabelCarved: { ...TYPE.price, fontSize: 14, color: COLORS.onTrough, ...TEXT_SHADOW },
+
+  slot: {
+    flex: 1,
+    minWidth: 0,
+    alignItems: 'center',
+    gap: 2,
+    paddingVertical: SPACE.xs,
+    borderRadius: RADIUS.sm,
+    borderWidth: 2,
+    backgroundColor: COLORS.slot,
+    borderColor: COLORS.slotEdge,
+  },
+  slotAmount: { ...TYPE.tiny, fontSize: 12, color: COLORS.text },
 
   badge: { alignItems: 'center', justifyContent: 'center', borderWidth: 2 },
 });

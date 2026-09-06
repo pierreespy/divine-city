@@ -15,10 +15,12 @@
  * au démarrage, et deux dalles le bordent de chaque côté : aucun onglet n'est
  * à plus de deux glissements de pouce, et la barre est symétrique.
  *
- * ⚠️ « Jouer » n'est pas une dalle comme les autres : c'est un MÉDAILLON
- * posé à cheval sur la barre, au centre, deux fois plus grand. Il occupe la
- * place qu'aurait eue son onglet — l'ordre du ruban ne change pas — mais il
- * annonce l'action du menu, là où les quatre autres n'annoncent qu'un lieu.
+ * ⚠️ La barre d'onglets est DESSINÉE d'un seul tenant (`assets/ui/onglets.jpg`) :
+ * les cinq dalles, leur icône et leur libellé sont dans l'image, dans l'ordre
+ * du ruban. L'écran ne pose que cinq zones cliquables et la LUEUR de l'onglet
+ * actif — d'où la disparition du médaillon « Jouer » : le dessin traite les
+ * cinq dalles à égalité, et un médaillon en relief par-dessus en recouvrirait
+ * une.
  *
  * ⚠️ Les onglets ne sont pas cinq écrans qui se remplacent : ils sont
  * COUSUS côte à côte dans un même ruban horizontal que le doigt fait
@@ -47,10 +49,9 @@ import {
   View,
   useWindowDimensions,
 } from 'react-native';
-import type { ImageSourcePropType } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import { ICONS } from './icons';
+import { ART } from './icons';
 import type { GodId } from '../../entities/gods/roster';
 import type { Progression } from '../../meta/progression';
 import { OlympeTab } from './OlympeTab';
@@ -60,7 +61,7 @@ import { QuetesTab } from './QuetesTab';
 import { SettingsSheet } from './SettingsSheet';
 import { ShopTab } from './ShopTab';
 import { TopBar } from './TopBar';
-import { COLORS, RADIUS, SPACE, TEXT_SHADOW, TOUCH_MIN, TYPE } from './theme';
+import { COLORS, SPACE, TYPE } from './theme';
 
 export type MenuTab = 'olympe' | 'quetes' | 'play' | 'pass' | 'shop';
 
@@ -68,48 +69,65 @@ export type MenuTab = 'olympe' | 'quetes' | 'play' | 'pass' | 'shop';
 const WALLPAPER_PLAY = require('../../../assets/wallpaper1.png');
 const WALLPAPER_OTHER = require('../../../assets/wallpaper2.png');
 
-/** Le temple dessiné qui encadre une page — fronton, colonnes et socle. */
-const TEMPLE_FRAME = require('../../../assets/temple_cadre.png');
-
 /**
- * Où s'arrête le dessin du cadre et où commence son intérieur, en fraction de
- * l'image (1393 × 2475) : c'est ce qui donne les marges du contenu.
+ * Le temple dessiné qui encadre une page — ciel, fronton, colonnes et socle
+ * (`ART.maquette`, 941 × 1672) — et où tombent ses trois repères.
  *
- * ⚠️ Mesuré sur l'image — le liseré d'or qui borde les colonnes, le linteau
- * et le socle — pas estimé à l'œil. Le cadre est étiré à la page, donc ces
- * fractions restent justes quelle que soit la taille de l'écran ; elles
- * cessent de l'être dès que le dessin change, et il faut alors re-mesurer,
+ * ⚠️ Tout est en fractions, et de DEUX grandeurs différentes, ce qui n'est pas
+ * un caprice :
+ *
+ *   `top` et `side` se mesurent sur la LARGEUR de l'écran, parce que le cadre
+ *   y est étiré d'un bord à l'autre et que le bandeau, qui lui cache le haut,
+ *   se mesure lui aussi sur la largeur ;
+ *
+ *   `plaque` et `content` se mesurent sur la HAUTEUR DU CADRE, parce que ce
+ *   sont des morceaux du dessin : la tablette du fronton et l'intérieur du
+ *   temple descendent avec lui quand il s'allonge.
+ *
+ * ⚠️ `top` est NÉGATIF : le haut du dessin passe derrière le bandeau, comme
+ * dans la maquette. Sans ce recouvrement, une bande de ciel apparaîtrait entre
+ * les deux.
+ *
+ * ⚠️ Mesurées sur la maquette (`design/`), pas estimées à l'œil. Elles cessent
+ * d'être justes dès que le dessin change, et il faut alors les re-mesurer,
  * sinon le contenu passe sous les colonnes.
  */
-const FRAME_INSET = { side: 0.122, top: 0.185, bottom: 0.14 };
+const FRAME = {
+  /** La hauteur du dessin, en largeurs d'écran. */
+  ratio: 1672 / 941,
+  /** De combien son haut passe derrière le bandeau, en largeurs d'écran. */
+  top: 88 / 768 - 306 / 2170,
+  /** Les colonnes, en largeurs d'écran. */
+  side: 0.125,
+  /**
+   * La tablette gravée du fronton. Ses bords se mesurent sur la largeur, sa
+   * hauteur sur celle du cadre — voir l'avertissement ci-dessus.
+   */
+  plaque: { top: 171 / 1364, height: 98 / 1364, side: 143 / 768 },
+  /** L'intérieur de marbre, en hauteurs de cadre. */
+  content: { top: 304 / 1364, height: 855 / 1364 },
+} as const;
 
 /**
- * La tablette gravée du fronton, dans les mêmes fractions : c'est là que
- * s'inscrit le titre de l'onglet, plutôt que sur une seconde tablette posée
- * en dessous.
+ * La barre d'onglets dessinée (`ART.onglets`, 4640 × 928) : sa hauteur en
+ * largeurs d'écran, soit exactement un cinquième — cinq dalles carrées.
  */
-const FRAME_PLAQUE = { top: 0.098, height: 0.059, side: 0.2 };
-
-/** Le médaillon « Jouer », et la place qu'il creuse au milieu de la barre. */
-const MEDALLION = 86;
+const TAB_BAR_HEIGHT = 928 / 4640;
 
 /**
  * L'ordre à l'écran, de gauche à droite. « Jouer » au milieu, encadré par
  * deux dalles de chaque côté.
  *
- * ⚠️ Les quatre dalles portent une IMAGE, le médaillon central un caractère.
- * Ce n'est pas un oubli : un onglet nomme un LIEU ou un OBJET — le temple, le
- * rouleau des quêtes, le casque du passe, l'amphore de la boutique — et une
- * image dessinée le montre mieux qu'un émoji, dont le tracé change d'un
- * téléphone à l'autre. « Jouer », lui, ne nomme pas un lieu mais un geste, et
- * il est déjà dit par la taille du médaillon et par son intitulé gravé.
+ * ⚠️ Il n'y a plus ni icône ni intitulé à poser : le dessin de la barre les
+ * porte déjà, dans cet ordre-ci. Ce qui reste est ce qu'une image ne sait pas
+ * faire — le nom lu à voix haute, et l'onglet vers lequel on saute.
  */
-const TABS: { id: MenuTab; label: string; icon: ImageSourcePropType | null }[] = [
-  { id: 'quetes', label: 'Quêtes', icon: ICONS.quetes },
-  { id: 'olympe', label: 'Olympe', icon: ICONS.olympe },
-  { id: 'play', label: 'Jouer', icon: null },
-  { id: 'pass', label: 'Passe', icon: ICONS.passe },
-  { id: 'shop', label: 'Boutique', icon: ICONS.boutique },
+const TABS: { id: MenuTab; label: string }[] = [
+  { id: 'quetes', label: 'Quêtes' },
+  { id: 'olympe', label: 'Olympe' },
+  { id: 'play', label: 'Jouer' },
+  { id: 'pass', label: 'Passe' },
+  { id: 'shop', label: 'Boutique' },
 ];
 
 const indexOf = (id: MenuTab) => TABS.findIndex((t) => t.id === id);
@@ -237,8 +255,8 @@ export function MenuScreen({
           >
             <Backdrop pageWidth={pageWidth} />
 
-            <Page width={pageWidth} height={naveHeight} framed title="Quêtes">
-              <QuetesTab state={state} />
+            <Page width={pageWidth} height={naveHeight} framed title="Quêtes et défis célestes">
+              <QuetesTab state={state} onGo={goTo} />
             </Page>
 
             <Page width={pageWidth} height={naveHeight} framed title="Olympe">
@@ -286,18 +304,24 @@ export function MenuScreen({
 }
 
 /**
- * La barre d'onglets : quatre dalles de marbre, et le médaillon « Jouer » qui
- * flotte au centre, à cheval sur la barre.
+ * La barre d'onglets : la frise DESSINÉE des cinq dalles, et la lueur qui
+ * marque celle où l'on se trouve.
  *
- * ⚠️ L'onglet actif ne change pas seulement de couleur : il MONTE et
- * s'éclaire, et son intitulé passe à l'or. Distinguer un onglet par sa seule
- * teinte le rend illisible pour qui distingue mal les nuances.
+ * ⚠️ Rien n'est composé ici. L'image porte les cinq dalles, leur icône et leur
+ * libellé ; l'écran pose cinq zones cliquables de largeur égale par-dessus,
+ * plus la lueur. C'est ce qui garde la barre exactement conforme au dessin,
+ * quel que soit le téléphone.
  *
- * ⚠️ Le médaillon n'est pas dans le rang : il est en position absolue, au
- * milieu exact de la barre. C'est pourquoi les quatre dalles sont réparties
- * en DEUX groupes de largeur égale, séparés par un vide (`dock`) : sans cette
- * symétrie, le centre de la barre ne tomberait pas dans le vide, et le
- * médaillon recouvrirait une dalle.
+ * ⚠️ La lueur SUIT LE DOIGT, elle ne saute pas d'une dalle à l'autre : elle est
+ * pilotée par la position du ruban (`scrollX`) et par le pilote natif, donc
+ * elle avance image par image même quand le fil JavaScript est occupé
+ * ailleurs. C'est le même geste que l'ancien trait d'or, dans une autre
+ * matière.
+ *
+ * ⚠️ Elle est chaude et DIFFUSE, pas plate : une dalle repeinte en jaune
+ * effacerait le dessin qu'elle recouvre, là qu'une lueur le laisse lire.
+ * Elle reste doublée par l'état d'accessibilité (`selected`), qui, lui, ne
+ * dépend d'aucune couleur.
  */
 function TabBar({
   index,
@@ -310,88 +334,68 @@ function TabBar({
   scrollX: Animated.Value;
   onGo: (id: MenuTab) => void;
 }) {
-  const playing = index === indexOf('play');
-
-  const slab = (id: MenuTab) => {
-    const { label, icon } = TABS[indexOf(id)];
-    const i = indexOf(id);
-    const active = index === i;
-    return (
-      <Pressable
-        testID={`tab-${id}`}
-        onPress={() => onGo(id)}
-        accessibilityRole="tab"
-        accessibilityState={{ selected: active }}
-        accessibilityLabel={label}
-        android_ripple={{ color: 'rgba(255, 255, 255, 0.18)' }}
-        style={({ pressed }) => [styles.tab, active && styles.tabActive, pressed && styles.tabPressed]}
-      >
-        {icon !== null && (
-          <Animated.Image
-            source={icon}
-            // `contain` : le fronton est large, le casque plus encore, et
-            // l'amphore haute. Ils partagent la même BOÎTE, pas le même
-            // cadrage — les étirer à un carré les déformerait.
-            resizeMode="contain"
-            // L'intitulé sous l'icône dit déjà l'onglet, et la dalle porte
-            // son propre `accessibilityLabel` : annoncée, l'image ferait
-            // entendre le nom deux fois.
-            accessible={false}
-            importantForAccessibility="no"
-            style={[
-              styles.tabIcon,
-              {
-                // L'icône grandit à mesure que l'onglet arrive sous le doigt :
-                // le passage d'un onglet à l'autre n'a pas d'à-coup.
-                transform: [
-                  {
-                    scale: scrollX.interpolate({
-                      inputRange: [(i - 1) * pageWidth, i * pageWidth, (i + 1) * pageWidth],
-                      outputRange: [0.85, 1.15, 0.85],
-                      extrapolate: 'clamp',
-                    }),
-                  },
-                ],
-              },
-            ]}
-          />
-        )}
-        <Text style={[styles.tabLabel, active && styles.tabLabelActive]} numberOfLines={1}>
-          {label}
-        </Text>
-      </Pressable>
-    );
-  };
+  const height = pageWidth * TAB_BAR_HEIGHT;
+  const cell = pageWidth / TABS.length;
+  const last = TABS.length - 1;
 
   return (
-    <View style={styles.tabBar}>
-      <View style={styles.side}>
-        {slab('quetes')}
-        {slab('olympe')}
-      </View>
+    <View style={[styles.tabBar, { height }]}>
+      <Image
+        source={ART.onglets}
+        // `stretch` sur une boîte déjà à la proportion du dessin ne déforme
+        // rien : la frise est étirée d'un bord à l'autre de l'écran, comme
+        // le bandeau du haut.
+        resizeMode="stretch"
+        accessible={false}
+        importantForAccessibility="no"
+        style={{ position: 'absolute', left: 0, top: 0, width: pageWidth, height }}
+      />
 
-      <View style={styles.dock} />
-
-      <View style={styles.side}>
-        {slab('pass')}
-        {slab('shop')}
-      </View>
-
-      <Pressable
-        testID="tab-play"
-        onPress={() => onGo('play')}
-        accessibilityRole="tab"
-        accessibilityState={{ selected: playing }}
-        accessibilityLabel="Jouer"
-        style={({ pressed }) => [styles.medallion, pressed && styles.medallionPressed]}
+      <Animated.View
+        pointerEvents="none"
+        style={[
+          styles.glow,
+          {
+            width: cell,
+            height: height * 1.2,
+            // La lueur déborde en bas : son centre tombe aux six dixièmes de
+            // la dalle, là où se trouve l'icône du dessin.
+            top: height * 0.05,
+            borderRadius: cell / 2,
+            transform: [
+              {
+                translateX: scrollX.interpolate({
+                  inputRange: [0, last * pageWidth],
+                  outputRange: [0, last * cell],
+                  extrapolate: 'clamp',
+                }),
+              },
+            ],
+          },
+        ]}
       >
         <LinearGradient
-          colors={playing ? [COLORS.goldLight, COLORS.gold] : [COLORS.panelRaised, COLORS.panelSunken]}
+          colors={['rgba(255, 215, 130, 0)', 'rgba(255, 225, 150, 0.55)', 'rgba(255, 215, 130, 0)']}
+          start={{ x: 0, y: 0.5 }}
+          end={{ x: 1, y: 0.5 }}
           style={StyleSheet.absoluteFill}
         />
-        <Text style={styles.medallionIcon}>⚔️</Text>
-        <Text style={styles.medallionLabel}>JOUER</Text>
-      </Pressable>
+      </Animated.View>
+
+      <View style={styles.tabRow}>
+        {TABS.map((tab, i) => (
+          <Pressable
+            key={tab.id}
+            testID={`tab-${tab.id}`}
+            onPress={() => onGo(tab.id)}
+            accessibilityRole="tab"
+            accessibilityState={{ selected: index === i }}
+            accessibilityLabel={tab.label}
+            android_ripple={{ color: 'rgba(255, 255, 255, 0.18)' }}
+            style={({ pressed }) => [styles.tab, pressed && styles.tabPressed]}
+          />
+        ))}
+      </View>
     </View>
   );
 }
@@ -434,14 +438,24 @@ function Backdrop({ pageWidth }: { pageWidth: number }) {
  * ⚠️ Elle est TRANSPARENTE, et c'est ce qui laisse voir le décor commun posé
  * dessous. Lui donner un fond couperait l'image en quatre.
  *
- * ⚠️ `framed` pose le temple dessiné (`temple_cadre.png`) sur la page :
- * fronton en haut, colonnes sur les côtés, socle en bas. Toutes les pages le
- * portent SAUF « Jouer », qui montre sa scène en grand.
+ * ⚠️ `framed` pose le temple dessiné (`ART.maquette`) sur la page : ciel,
+ * fronton, colonnes et socle. Toutes les pages le portent SAUF « Jouer », qui
+ * montre sa scène en grand.
  *
- * Le cadre est ÉTIRÉ à la page, pas cadré : c'est un encadrement, et ses
- * bords doivent tomber sur ceux de la page quel que soit le téléphone. Il est
- * posé en premier, donc sous le contenu, et le contenu s'écarte de ses
- * marges (`FRAME_INSET`) pour ne pas passer sous les colonnes.
+ * ⚠️ Le cadre porte SON PROPRE décor — le ciel et les nuages sont dans le
+ * dessin — et recouvre donc le papier peint des quatre onglets encadrés. Ce
+ * n'est pas un doublon : le papier peint reste ce que montre « Jouer », et ce
+ * qui glisse sous le doigt entre deux onglets.
+ *
+ * ⚠️ Il est posé à la LARGEUR de la page et garde sa proportion, plutôt que
+ * d'être étiré aux quatre bords : ses colonnes sont des objets, et les
+ * allonger sur un écran étroit les rendrait maigres. Il n'est étiré que dans
+ * le cas où la page est plus haute que lui — sinon son socle flotterait au
+ * milieu du vide.
+ *
+ * Il est posé en premier, donc sous le contenu, et le contenu se range dans
+ * son intérieur de marbre (`FRAME.content`) pour ne pas passer sous les
+ * colonnes.
  *
  * ⚠️ Le titre de l'onglet s'écrit DANS la tablette du fronton. C'est pour
  * cela qu'aucun onglet encadré ne pose plus sa propre `Plaque` : la tablette
@@ -461,9 +475,27 @@ function Page({
   title?: string;
   children: ReactNode;
 }) {
-  // Tant que la page n'est pas mesurée, on ne connaît pas ses marges hautes
-  // et basses : le cadre attend plutôt que de se poser de travers.
+  // Tant que la page n'est pas mesurée, on ne connaît pas sa hauteur : le
+  // cadre attend plutôt que de se poser de travers.
   const showFrame = framed && height > 0;
+
+  // Le haut du cadre, au-dessus de la page : il passe derrière le bandeau.
+  const frameTop = width * FRAME.top;
+  // Sa hauteur : la sienne, sauf sur une page plus haute que lui — là, il
+  // s'allonge.
+  //
+  // ⚠️ Il descend SOUS la page, derrière la barre d'onglets, comme dans la
+  // maquette. Sans ce débordement, tout son socle se retrouverait au-dessus
+  // de la barre : le temple garderait une terrasse de pierre vide en bas
+  // d'écran, et l'intérieur de marbre — la seule surface utile — perdrait
+  // d'autant.
+  const frameHeight = Math.max(
+    width * FRAME.ratio,
+    height + width * TAB_BAR_HEIGHT - frameTop,
+  );
+
+  const contentTop = frameTop + frameHeight * FRAME.content.top;
+  const contentBottom = height - (contentTop + frameHeight * FRAME.content.height);
 
   return (
     <View
@@ -477,21 +509,31 @@ function Page({
         { width, height: height > 0 ? height : undefined },
         showFrame
           ? {
-              paddingHorizontal: width * FRAME_INSET.side,
-              paddingTop: height * FRAME_INSET.top,
-              paddingBottom: height * FRAME_INSET.bottom,
+              paddingHorizontal: width * FRAME.side,
+              paddingTop: contentTop,
+              // Sur un écran très court, l'intérieur du temple descendrait
+              // sous la barre d'onglets : on le rattrape au bas de la page
+              // plutôt que de le laisser passer dessous.
+              paddingBottom: Math.max(0, contentBottom),
             }
           : styles.pageBare,
       ]}
     >
       {showFrame && (
-        <View pointerEvents="none" style={[styles.frame, { width, height }]}>
+        // ⚠️ La taille du cadre est ÉCRITE, pas déduite d'un `absoluteFill` :
+        // une image porte sa taille native, et quatre côtés à zéro ne la
+        // contraignent pas. Il DÉPASSE la page en haut et, souvent, en bas :
+        // le bandeau et la barre d'onglets recouvrent ce qui dépasse.
+        <View
+          pointerEvents="none"
+          style={[styles.frame, { top: frameTop, width, height: frameHeight }]}
+        >
           <Image
-            source={TEMPLE_FRAME}
+            source={ART.maquette}
             resizeMode="stretch"
             accessible={false}
             importantForAccessibility="no"
-            style={{ width, height }}
+            style={{ width, height: frameHeight }}
           />
         </View>
       )}
@@ -504,14 +546,24 @@ function Page({
           style={[
             styles.framePlaque,
             {
-              top: height * FRAME_PLAQUE.top,
-              height: height * FRAME_PLAQUE.height,
-              left: width * FRAME_PLAQUE.side,
-              right: width * FRAME_PLAQUE.side,
+              top: frameTop + frameHeight * FRAME.plaque.top,
+              height: frameHeight * FRAME.plaque.height,
+              left: width * FRAME.plaque.side,
+              right: width * FRAME.plaque.side,
             },
           ]}
         >
-          <Text numberOfLines={1} adjustsFontSizeToFit accessibilityRole="header" style={styles.frameTitle}>
+          {/* ⚠️ La taille du titre suit la LARGEUR de l'écran, comme la
+              tablette qui le porte : une taille en points déborderait du
+              marbre sur un téléphone étroit, et y flotterait sur une
+              tablette. `adjustsFontSizeToFit` ne rattrape rien sur le web,
+              où il n'existe pas — la taille doit être juste d'avance. */}
+          <Text
+            numberOfLines={2}
+            adjustsFontSizeToFit
+            accessibilityRole="header"
+            style={[styles.frameTitle, { fontSize: width * (26 / 768) }]}
+          >
             {title.toUpperCase()}
           </Text>
         </View>
@@ -531,72 +583,31 @@ const styles = StyleSheet.create({
   nave: { flex: 1 },
   pager: { flex: 1 },
   page: {},
-  // ⚠️ La taille du cadre est ÉCRITE, pas déduite d'un `absoluteFill` : une
-  // image porte sa taille native (1024 × 1536), et quatre côtés à zéro ne la
-  // contraignent pas — elle se dessinerait en grand, fronton au milieu de la
-  // page.
-  frame: { position: 'absolute', left: 0, top: 0 },
-  // Sans cadre — « Jouer » — les cartes s'écartent quand même des bords, et
-  // s'arrêtent au-dessus du médaillon.
-  pageBare: { paddingHorizontal: SPACE.md + SPACE.sm, paddingBottom: MEDALLION / 3 },
+  frame: { position: 'absolute', left: 0 },
+  // Sans cadre — « Jouer » — les cartes s'écartent quand même des bords. La
+  // marge haute n'est pas décorative : le médaillon du dieu et sa plaque de
+  // niveau débordent du bandeau, et sans elle la première carte passerait
+  // dessous.
+  pageBare: { paddingHorizontal: SPACE.md + SPACE.sm, paddingTop: SPACE.md, paddingBottom: SPACE.lg },
   // La tablette du fronton : une boîte posée sur le dessin, qui centre son
   // titre dans les deux sens.
-  framePlaque: { position: 'absolute', alignItems: 'center', justifyContent: 'center' },
-  frameTitle: { ...TYPE.banner, fontSize: 20, color: COLORS.text, textAlign: 'center' },
-
-  tabBar: {
-    flexDirection: 'row',
-    gap: 2,
-    paddingHorizontal: SPACE.sm,
-    paddingTop: SPACE.xs,
-    backgroundColor: COLORS.bar,
-    borderTopWidth: 3,
-    borderTopColor: COLORS.frame,
-  },
-  // Les deux moitiés de la barre, de part et d'autre du médaillon.
-  side: { flex: 1, flexDirection: 'row', gap: 2 },
-  dock: { width: MEDALLION + SPACE.sm },
-  // Le médaillon déborde en haut de la barre : il chevauche le ruban, et
-  // c'est ce débordement qui le fait lire comme un bouton posé dessus.
-  medallion: {
+  framePlaque: {
     position: 'absolute',
-    // ⚠️ `alignSelf` ne centrerait QUE sur l'axe vertical dans une barre en
-    // rang : le centrage horizontal se fait à la main.
-    left: '50%',
-    marginLeft: -MEDALLION / 2,
-    top: -MEDALLION / 3,
-    width: MEDALLION,
-    height: MEDALLION,
-    borderRadius: MEDALLION / 2,
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 4,
-    borderColor: COLORS.frameDeep,
-    overflow: 'hidden',
+    paddingHorizontal: SPACE.sm,
   },
-  medallionPressed: { transform: [{ scale: 0.94 }] },
-  medallionIcon: { fontSize: 30 },
-  medallionLabel: { ...TYPE.banner, fontSize: 13, color: COLORS.onGold },
-  tab: {
-    flex: 1,
-    minHeight: TOUCH_MIN + 8,
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 2,
-    paddingVertical: SPACE.sm,
-    borderTopLeftRadius: RADIUS.sm,
-    borderTopRightRadius: RADIUS.sm,
-  },
-  // L'onglet actif est une dalle éclairée, posée sur la barre sombre.
-  tabActive: { backgroundColor: COLORS.frameDark, borderBottomWidth: 3, borderBottomColor: COLORS.gold },
-  tabPressed: { opacity: 0.75 },
-  // La boîte de l'icône, la même pour les trois : sans hauteur fixe, une
-  // amphore haute pousserait son intitulé plus bas que celui du fronton, et
-  // la barre cesserait d'être alignée.
-  // Elle est plus LARGE que haute : le casque du passe porte deux ailes
-  // déployées, et dans une boîte carrée ce sont elles qui prennent la place,
-  // laissant le casque lui-même illisible.
-  tabIcon: { width: 38, height: 28 },
-  tabLabel: { ...TYPE.tab, ...TEXT_SHADOW, fontSize: 11, color: COLORS.onDark, opacity: 0.75 },
-  tabLabelActive: { color: COLORS.gold, opacity: 1 },
+  frameTitle: { ...TYPE.banner, color: COLORS.text, textAlign: 'center' },
+
+  // ⚠️ La barre ne peint RIEN : la frise dessinée est opaque et pleine
+  // largeur, et un fond derrière elle ne se verrait jamais. Elle coupe, en
+  // revanche — la lueur de l'onglet actif déborde du dessin, et sans cela
+  // elle passerait sur le décor au-dessus de la barre.
+  tabBar: { overflow: 'hidden' },
+  glow: { position: 'absolute', left: 0, overflow: 'hidden' },
+  tabRow: { flexDirection: 'row', height: '100%' },
+  // Une zone cliquable, et rien d'autre : l'icône et l'intitulé sont dans le
+  // dessin. Elle ne peint qu'au toucher, pour dire que l'appui a été pris.
+  tab: { flex: 1, height: '100%' },
+  tabPressed: { backgroundColor: 'rgba(255, 255, 255, 0.16)' },
 });

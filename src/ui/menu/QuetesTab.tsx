@@ -7,19 +7,37 @@
  * joueur qui ouvre cet onglet pour la première fois y trouve donc l'avance
  * qu'il a réellement prise, et non quatre barres à zéro.
  *
- * ⚠️ Une quête ne se RÉCLAME pas encore. Rien ici ne promet une récompense :
- * il n'existe aucun moyen d'en accorder une, et une pastille « + 200 or » qui
- * ne donne rien vaut moins qu'un objectif franc. Le jour où les récompenses
- * existeront, elles s'ajouteront sous chaque ligne, et `done` dira quoi
- * verser. Même règle que l'arène et la voie divine : on affiche ce qui est
- * vrai, on annonce le reste.
+ * ⚠️ Les deux titres — « quotidiennes », « hebdomadaires » — viennent de la
+ * maquette et ANNONCENT une rotation qui n'existe pas encore : rien ici ne
+ * remet un compteur à zéro à minuit ni le lundi, faute d'horloge et de
+ * sauvegarde datée. Les deux sections disent donc pour l'instant l'ÉCHÉANCE
+ * d'un travail — ce qui se finit en une soirée, ce qui prend une saison — et
+ * la note de bas de page le dit au joueur plutôt que de le laisser croire à
+ * un compte à rebours. Le jour où la rotation existera, ce sont les données de
+ * `questsOf` qui changeront, pas la mise en page.
+ *
+ * ⚠️ Une quête ne se RÉCLAME pas davantage. Les récompenses sont annoncées —
+ * la maquette les montre, et elles sont vraies au sens où elles disent ce qui
+ * sera versé — mais le bouton « Récupérer » reste ÉTEINT : il n'existe aucun
+ * moyen d'accorder une récompense, et un bouton qui ne donne rien vaut moins
+ * qu'un bouton visiblement en attente. Le jour où le système existera, il
+ * suffira de rendre `onClaim` au lieu de désactiver. Même règle que l'arène et
+ * la voie divine : on affiche ce qui est vrai, on annonce le reste.
  */
 
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import type { Progression } from '../../meta/progression';
 import { rankOf } from '../../meta/rank';
-import { Bar, Card, Coin, Laurel, SectionTitle } from './parts';
+import { ICONS } from './icons';
+import type { MenuTab } from './MenuScreen';
+import { Bar, Button, Card, RewardSlot, SectionTitle, Tile } from './parts';
 import { COLORS, SPACE, TYPE } from './theme';
+
+/** Ce qu'une quête rapportera, le jour où les récompenses se verseront. */
+interface Reward {
+  tone: 'gold' | 'laurel';
+  amount: number;
+}
 
 /** Une quête : un intitulé, un but, et de quoi lire l'avance dans l'état. */
 interface Quest {
@@ -30,9 +48,30 @@ interface Quest {
   /** L'avance, et le but. Les deux se comptent dans la même unité. */
   done: number;
   goal: number;
-  /** Le jeton posé à gauche, quand la quête parle d'une monnaie. */
-  tone?: 'gold' | 'laurel';
+  rewards: Reward[];
+  /** L'onglet où l'on avance cette quête — la cible du bouton « Aller ». */
+  go: MenuTab;
+  /** Ce qu'elle pèse sur la piste hebdomadaire. Nul pour une quête du jour. */
+  points?: number;
 }
+
+/** Le total de la piste hebdomadaire, en points de quête. */
+const WEEKLY_GOAL = 1000;
+
+/**
+ * Les paliers de la piste hebdomadaire : ce qu'on décroche en avançant.
+ *
+ * ⚠️ Les deux derniers sont plus gros que les trois premiers, et c'est ce qui
+ * fait tenir une piste : la fin doit valoir le chemin. La maquette les
+ * distingue d'ailleurs à l'œil, en les dorant.
+ */
+const MILESTONES: { at: number; reward: Reward }[] = [
+  { at: 200, reward: { tone: 'gold', amount: 150 } },
+  { at: 400, reward: { tone: 'gold', amount: 250 } },
+  { at: 600, reward: { tone: 'gold', amount: 400 } },
+  { at: 800, reward: { tone: 'laurel', amount: 15 } },
+  { at: WEEKLY_GOAL, reward: { tone: 'laurel', amount: 40 } },
+];
 
 /**
  * Les travaux, du plus proche au plus lointain.
@@ -41,16 +80,21 @@ interface Quest {
  * se termine en une course, le dernier en une saison. C'est ce qui donne
  * envie de lire la liste jusqu'en bas plutôt que de s'arrêter à la première.
  */
-function questsOf(state: Progression): { near: Quest[]; far: Quest[] } {
+function questsOf(state: Progression): { daily: Quest[]; weekly: Quest[] } {
   const rank = rankOf(state.bestScore);
   return {
-    near: [
+    daily: [
       {
         id: 'first-run',
         label: 'Mener un premier cortège',
         note: 'Convertis cinquante mortels dans une même course.',
         done: Math.min(state.bestScore, 50),
         goal: 50,
+        rewards: [
+          { tone: 'gold', amount: 100 },
+          { tone: 'laurel', amount: 5 },
+        ],
+        go: 'play',
       },
       {
         id: 'purse',
@@ -58,16 +102,11 @@ function questsOf(state: Progression): { near: Quest[]; far: Quest[] } {
         note: 'Un fidèle sur trois laisse une pièce derrière lui.',
         done: Math.min(state.gold, 500),
         goal: 500,
-        tone: 'gold',
-      },
-    ],
-    far: [
-      {
-        id: 'rank',
-        label: 'Monter au dixième rang',
-        note: `Rang ${rank.level} pour l'instant — il suit le meilleur cortège.`,
-        done: Math.min(rank.level, 10),
-        goal: 10,
+        rewards: [
+          { tone: 'gold', amount: 150 },
+          { tone: 'laurel', amount: 10 },
+        ],
+        go: 'play',
       },
       {
         id: 'pantheon',
@@ -75,6 +114,26 @@ function questsOf(state: Progression): { near: Quest[]; far: Quest[] } {
         note: 'Les autres s’achètent au panthéon, en or.',
         done: Math.min(state.ownedGods.length, 3),
         goal: 3,
+        rewards: [
+          { tone: 'gold', amount: 200 },
+          { tone: 'laurel', amount: 10 },
+        ],
+        go: 'olympe',
+      },
+    ],
+    weekly: [
+      {
+        id: 'rank',
+        label: 'Monter au dixième rang',
+        note: `Rang ${rank.level} pour l'instant — il suit le meilleur cortège.`,
+        done: Math.min(rank.level, 10),
+        goal: 10,
+        rewards: [
+          { tone: 'gold', amount: 500 },
+          { tone: 'laurel', amount: 25 },
+        ],
+        go: 'play',
+        points: 700,
       },
       {
         id: 'laurels',
@@ -82,16 +141,41 @@ function questsOf(state: Progression): { near: Quest[]; far: Quest[] } {
         note: 'La monnaie des dieux ne se ramasse pas dans la rue.',
         done: Math.min(state.laurels, 1),
         goal: 1,
-        tone: 'laurel',
+        rewards: [
+          { tone: 'gold', amount: 300 },
+          { tone: 'laurel', amount: 10 },
+        ],
+        go: 'shop',
+        points: 300,
       },
     ],
   };
 }
 
-export function QuetesTab({ state }: { state: Progression }) {
-  const { near, far } = questsOf(state);
-  const all = [...near, ...far];
-  const finished = all.filter((q) => q.done >= q.goal).length;
+/**
+ * Les points de quête gagnés cette saison : l'avance de chaque quête
+ * hebdomadaire, au prorata de ce qu'elle vaut.
+ *
+ * ⚠️ C'est un COMPTE, pas un compteur : il se recalcule à chaque affichage à
+ * partir de la sauvegarde, comme les quêtes elles-mêmes. Rien à remettre à
+ * zéro, rien à perdre en changeant de téléphone.
+ */
+function weeklyPoints(weekly: Quest[]): number {
+  return weekly.reduce((total, quest) => {
+    const ratio = quest.goal <= 0 ? 0 : Math.min(1, quest.done / quest.goal);
+    return total + Math.round((quest.points ?? 0) * ratio);
+  }, 0);
+}
+
+export function QuetesTab({
+  state,
+  onGo,
+}: {
+  state: Progression;
+  onGo: (tab: MenuTab) => void;
+}) {
+  const { daily, weekly } = questsOf(state);
+  const points = weeklyPoints(weekly);
 
   return (
     <ScrollView
@@ -100,80 +184,160 @@ export function QuetesTab({ state }: { state: Progression }) {
       showsVerticalScrollIndicator={false}
       nestedScrollEnabled
     >
-      <Card style={styles.tally}>
-        <Text style={styles.tallyText}>
-          {finished === all.length
-            ? 'Toutes les quêtes sont accomplies. La suite viendra avec la saison.'
-            : `${finished} quête${finished > 1 ? 's' : ''} accomplie${
-                finished > 1 ? 's' : ''
-              } sur ${all.length}.`}
+      <SectionTitle large>Quêtes quotidiennes</SectionTitle>
+      {daily.map((quest) => (
+        <QuestCard key={quest.id} quest={quest} onGo={onGo} />
+      ))}
+
+      {/* Le filet qui sépare les deux sections : il s'éteint à ses deux
+          bouts, pour ne pas buter contre les colonnes du temple. */}
+      <View style={styles.rule} />
+      <SectionTitle large>Quêtes hebdomadaires</SectionTitle>
+
+      <Card style={styles.track}>
+        <View style={styles.milestones}>
+          {MILESTONES.map((milestone) => (
+            <Tile
+              key={milestone.at}
+              image={milestone.reward.tone === 'gold' ? ICONS.or : ICONS.laurier}
+              count={milestone.reward.amount}
+              size={42}
+              // Trois états, et pas un de plus : décroché, à portée du
+              // prochain palier, hors d'atteinte pour l'instant.
+              state={
+                points >= milestone.at
+                  ? 'taken'
+                  : milestone.at === nextMilestone(points)
+                    ? 'ready'
+                    : 'locked'
+              }
+            />
+          ))}
+        </View>
+        <Bar value={points} max={WEEKLY_GOAL} carved height={34} label="" />
+        <Text style={styles.trackCount}>
+          Points de quête hebdomadaires : {points.toLocaleString('fr-FR')} /{' '}
+          {WEEKLY_GOAL.toLocaleString('fr-FR')}
         </Text>
       </Card>
 
-      <SectionTitle>À portée</SectionTitle>
-      {near.map((quest) => (
-        <QuestRow key={quest.id} quest={quest} />
-      ))}
-
-      <SectionTitle>De longue haleine</SectionTitle>
-      {far.map((quest) => (
-        <QuestRow key={quest.id} quest={quest} />
+      {weekly.map((quest) => (
+        <QuestCard key={quest.id} quest={quest} onGo={onGo} />
       ))}
 
       <Text style={styles.footer}>
         Les quêtes se lisent sur ta progression : elles avancent toutes seules,
-        au fil des courses. Les récompenses viendront avec le système qui saura
-        les verser.
+        au fil des courses, et rien ne les remet encore à zéro d’un jour ni
+        d’une semaine à l’autre. Les récompenses annoncées seront versées quand
+        le système qui les accorde existera.
       </Text>
     </ScrollView>
   );
 }
 
+/** Le premier palier qu'on n'a pas encore franchi — celui qui est « à portée ». */
+function nextMilestone(points: number): number | undefined {
+  return MILESTONES.find((milestone) => points < milestone.at)?.at;
+}
+
 /**
- * Une ligne de quête : le but, l'avance, et la coche quand c'est fini.
+ * Une carte de quête : le but et l'avance à gauche, ce qu'elle rapporte et le
+ * bouton à droite.
  *
- * La jauge porte le compte EN TOUTES LETTRES par-dessus elle — un joueur veut
+ * ⚠️ Les deux colonnes ne sont pas décoratives : à gauche ce qu'on LIT une
+ * fois — l'intitulé, la consigne, le compte —, à droite ce qu'on cherche du
+ * regard en parcourant la liste — le gain, et le geste qui suit. C'est ce qui
+ * permet de balayer dix quêtes sans en lire une seule.
+ *
+ * La jauge porte le compte EN TOUTES LETTRES par-dessus elle : un joueur veut
  * savoir combien il lui reste, pas estimer une longueur à l'œil.
  */
-function QuestRow({ quest }: { quest: Quest }) {
+function QuestCard({ quest, onGo }: { quest: Quest; onGo: (tab: MenuTab) => void }) {
   const done = quest.done >= quest.goal;
   return (
-    <Card style={[styles.quest, done && styles.questDone]}>
-      <View style={styles.questHead}>
-        {quest.tone === 'gold' && <Coin size={20} />}
-        {quest.tone === 'laurel' && <Laurel size={20} />}
-        <Text style={[styles.questLabel, done && styles.questLabelDone]} numberOfLines={1}>
-          {quest.label}
-        </Text>
-        {done && <Text style={styles.questCheck}>✓</Text>}
+    <Card style={styles.quest}>
+      <View style={styles.questBody}>
+        <View style={styles.questText}>
+          <Text style={styles.questLabel} numberOfLines={2}>
+            {quest.label}
+          </Text>
+          <Text style={styles.questNote} numberOfLines={2}>
+            {quest.note}
+          </Text>
+          <Bar
+            value={quest.done}
+            max={quest.goal}
+            carved
+            label={`${quest.done.toLocaleString('fr-FR')} / ${quest.goal.toLocaleString('fr-FR')}`}
+          />
+        </View>
+
+        <View style={styles.questSide}>
+          <View style={styles.rewards}>
+            {quest.rewards.map((reward) => (
+              <RewardSlot key={reward.tone} tone={reward.tone} amount={reward.amount} />
+            ))}
+          </View>
+          {done ? (
+            <Button
+              label="Récupérer"
+              variant="claim"
+              size="small"
+              disabled
+              hint={`${quest.label} : accomplie. La récompense sera versée quand le système qui l’accorde existera.`}
+              onPress={() => undefined}
+            />
+          ) : (
+            <Button
+              label="Aller"
+              variant="go"
+              size="small"
+              hint={`${quest.label} : aller là où elle s’avance`}
+              onPress={() => onGo(quest.go)}
+            />
+          )}
+        </View>
       </View>
-      <Text style={styles.questNote}>{quest.note}</Text>
-      <Bar
-        value={quest.done}
-        max={quest.goal}
-        tone={quest.tone === 'laurel' ? 'laurel' : 'gold'}
-        label={`${quest.done.toLocaleString('fr-FR')} / ${quest.goal.toLocaleString('fr-FR')}`}
-      />
     </Card>
   );
 }
 
 const styles = StyleSheet.create({
   root: { flex: 1 },
-  content: { paddingVertical: SPACE.sm, gap: SPACE.sm, paddingBottom: SPACE.xl },
+  // ⚠️ La marge latérale est petite mais nécessaire : l'intérieur du temple
+  // est mesuré sur son liseré d'or, et une ligne de texte qui va d'un bord à
+  // l'autre vient mordre sur la moulure des colonnes.
+  content: {
+    paddingTop: SPACE.xs,
+    paddingHorizontal: SPACE.xs,
+    gap: SPACE.sm,
+    paddingBottom: SPACE.xl,
+  },
 
-  tally: { paddingVertical: SPACE.sm },
-  tallyText: { ...TYPE.body, fontSize: 13, color: COLORS.text, textAlign: 'center' },
+  rule: {
+    height: 1,
+    marginTop: SPACE.md,
+    backgroundColor: COLORS.border,
+  },
 
-  quest: { gap: SPACE.xs },
-  // Une quête finie s'éteint : elle a déjà été lue, et la place appartient
-  // désormais à celles qui restent.
-  questDone: { opacity: 0.75 },
-  questHead: { flexDirection: 'row', alignItems: 'center', gap: SPACE.sm },
-  questLabel: { ...TYPE.title, fontSize: 15, color: COLORS.text, flex: 1, minWidth: 0 },
-  questLabelDone: { color: COLORS.muted },
-  questCheck: { ...TYPE.banner, fontSize: 16, color: COLORS.done },
+  quest: {},
+  questBody: { flexDirection: 'row', gap: SPACE.sm, alignItems: 'flex-start' },
+  // ⚠️ La jauge est DANS cette colonne, sous la consigne, et non en travers
+  // de la carte : c'est ce qui garde une quête à la hauteur de ses deux
+  // casiers de récompense. Pleine largeur, elle ajoutait une ligne à chaque
+  // carte, et la liste ne montrait plus que deux quêtes par écran.
+  questText: { flex: 1, minWidth: 0, gap: SPACE.xs },
+  questLabel: { ...TYPE.title, fontSize: 15, color: COLORS.text },
   questNote: { ...TYPE.body, fontSize: 12, color: COLORS.muted, lineHeight: 16 },
+  // ⚠️ La colonne de droite est une FRACTION de la carte, pas une largeur en
+  // points : elle porte deux casiers et un bouton, et sur un petit écran une
+  // largeur fixe mangerait tout l'intitulé de gauche.
+  questSide: { width: '34%', gap: SPACE.xs },
+  rewards: { flexDirection: 'row', gap: SPACE.xs },
+
+  track: { gap: SPACE.sm },
+  milestones: { flexDirection: 'row', justifyContent: 'space-between' },
+  trackCount: { ...TYPE.body, fontSize: 13, color: COLORS.text, textAlign: 'center' },
 
   footer: {
     ...TYPE.body,

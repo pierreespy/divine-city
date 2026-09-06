@@ -69,6 +69,42 @@ export const COLORS = {
   border: 'rgba(95, 59, 24, 0.28)',
   borderStrong: '#c9a227',
 
+  /**
+   * La gouttière CREUSÉE d'une jauge de quête : du bois sombre cerclé de
+   * bois clair, et le compte écrit en blanc par-dessus.
+   *
+   * ⚠️ Ce n'est pas le creux du parchemin (`panelSunken`) : une jauge se lit
+   * de loin, et une coulée d'or sur du parchemin clair ne se voit pas. Le
+   * fond sombre est ce qui rend la part remplie évidente.
+   */
+  trough: '#4a3a2b',
+  troughEdge: '#8d6f4f',
+  /** Le texte posé DANS la gouttière, et sur les deux boutons ci-dessous. */
+  onTrough: '#ffffff',
+
+  /** Le casier d'une récompense, dans une carte de quête. */
+  slot: '#d9c3a3',
+  slotEdge: '#a98a63',
+
+  /**
+   * Les deux boutons d'une carte de quête, et pourquoi ils ne sont ni l'un
+   * ni l'autre en or :
+   *
+   * `go`    le bleu de ce qui MÈNE ailleurs — la quête n'est pas finie, le
+   *         bouton emmène là où on l'avance ;
+   * `claim` le vert de ce qui EST ACQUIS — la quête est faite, il ne reste
+   *         qu'à prendre.
+   *
+   * L'or, lui, reste la couleur de la monnaie et de l'action principale de
+   * l'écran : trois boutons d'or sur une même carte ne diraient plus rien.
+   */
+  go: '#2b7fba',
+  goLight: '#5fb4e6',
+  goEdge: '#275f88',
+  claim: '#4f9c35',
+  claimLight: '#8fce6a',
+  claimEdge: '#3d7a28',
+
   /** Le bois du bandeau supérieur et de la barre d'onglets. */
   bar: '#5b3f22',
   /** Le voile posé derrière une feuille de paramètres. */
