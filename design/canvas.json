@@ -10,7 +10,7 @@
       "x": 0,
       "y": -150,
       "w": 390,
-      "text": "Les cinq onglets sont cliquables : Quêtes, Olympe, Jouer (au milieu), Passe, Boutique.\nLe bandeau du haut et la barre d'onglets du bas courent chacun sur toute la largeur de l'appli, collés aux deux bords de l'écran (TopBar.tsx, TabBar de MenuScreen.tsx). Le temple dessiné (temple_cadre.png) encadre l'écran ENTIER sur tous les onglets sauf « Jouer ». Fond = wallpaper1.png (Jouer) et wallpaper2.png (les quatre autres). Couleurs, prix et capacités viennent de roster.ts et store.ts (M12)."
+      "text": "Les cinq onglets sont cliquables : Quêtes, Olympe, Jouer (au milieu), Passe, Boutique.\nLe bandeau du haut (assets/ui/bandeau2.png) et la barre d'onglets du bas (assets/ui/onglets.jpg) courent chacun sur toute la largeur de l'appli, collés aux deux bords de l'écran. La maquette (assets/ui/maquette.png) encadre l'écran ENTIER sur tous les onglets sauf « Jouer ». Fond = wallpaper1.png (Jouer) et wallpaper2.png (les quatre autres). Couleurs, prix et capacités viennent de roster.ts et store.ts (M12)."
     },
     {
       "id": "note-reglages",

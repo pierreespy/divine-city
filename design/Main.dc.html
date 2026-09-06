@@ -23,24 +23,24 @@
     <img src="{{wallpaperSrc}}" style="width: 100%; height: 100%; object-fit: cover;" />
   </div>
 
-  <!-- LE TEMPLE DESSINÉ — posé sur TOUS les onglets sauf « Jouer », étiré
-       d'un bord à l'autre de l'écran : c'est lui qui remplit l'écran entier,
-       fronton, colonnes et socle compris (temple_cadre.png, voir
-       assets/README.md). Le titre de l'onglet s'écrit dans sa tablette. -->
+  <!-- LA MAQUETTE (assets/ui/maquette.png) — posée sur TOUS les onglets
+       sauf « Jouer », étirée d'un bord à l'autre de l'écran : c'est elle
+       qui remplit l'écran entier, fronton, colonnes et socle compris. Le
+       titre de l'onglet s'écrit dans sa tablette. -->
   <sc-if value="{{framed}}" hint-placeholder-val="{{ true }}">
     <div style="position: absolute; inset: 0; pointer-events: none;">
-      <img src="temple-cadre.jpg" style="width: 100%; height: 100%; object-fit: fill;" />
-      <div style="position: absolute; top: 9.8%; left: 20%; right: 20%; height: 5.9%; display: flex; align-items: center; justify-content: center;">
-        <span style="font-family: Cinzel, Georgia, serif; font-size: 15px; font-weight: 700; letter-spacing: 1px; color: #4a2f16;">{{tabTitle}}</span>
+      <img src="maquette.jpg" style="width: 100%; height: 100%; object-fit: fill;" />
+      <div style="position: absolute; top: 12.4%; left: 20.7%; right: 21.5%; height: 6%; display: flex; align-items: center; justify-content: center;">
+        <span style="font-family: Cinzel, Georgia, serif; font-size: 14px; font-weight: 700; letter-spacing: 1px; color: #4a2f16;">{{tabTitle}}</span>
       </div>
     </div>
   </sc-if>
 
   <!-- ONGLET JOUER — la scène en grand, sans cadre : PlayTab.tsx. -->
   <sc-if value="{{isJouer}}" hint-placeholder-val="{{ true }}">
-    <div style="position: relative; padding: 82px 20px 0 20px; height: 100%; display: flex; flex-direction: column; gap: 12px; overflow: hidden;">
+    <div style="position: relative; padding: 90px 20px 0 20px; height: 100%; display: flex; flex-direction: column; gap: 12px; overflow: hidden;">
 
-      <!-- Le rang : le même cadre gravé que le bandeau du haut (ligue.png), étiré. -->
+      <!-- Le rang : le cadre gravé de la course sacrée (ligue.png), étiré — pas le même dessin que le bandeau du haut (bandeau2.png). -->
       <div style="position: relative; min-height: 118px; border-radius: 8px; overflow: hidden; display: flex; flex-direction: column; justify-content: center; padding: 20px 26px;">
         <img src="ligue.jpg" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: fill;" />
         <div style="position: relative; display: flex; flex-direction: column; gap: 8px; align-items: center;">
@@ -66,7 +66,6 @@
       <!-- La course sacrée — la carte d'appel, cadre doré. -->
       <div style="border-radius: 14px; border: 3px solid #c9a227; background: #fdf4e0; padding: 12px; display: flex; flex-direction: column; gap: 10px;">
         <div style="border-radius: 8px; overflow: hidden; min-height: 46px; display: flex; align-items: center; justify-content: center;">
-          <img src="ligue.jpg" style="position: absolute; width: 200px; opacity: 0;" />
           <span style="font-family: Cinzel, Georgia, serif; font-size: 14px; font-weight: 700; color: #4a2f16; padding: 12px; background: #f6e7c8; border-radius: 8px; width: 100%; text-align: center; border: 2px solid #c08b4b; border-bottom: 4px solid #8a5a2b;">LA COURSE SACRÉE</span>
         </div>
         <img src="../assets/ui/course.png" style="width: 100%; height: 82px; object-fit: cover; border-radius: 8px; border: 2px solid #8a5a2b;" />
@@ -85,7 +84,7 @@
 
   <!-- ONGLET QUÊTES -->
   <sc-if value="{{isQuetes}}" hint-placeholder-val="{{ false }}">
-    <div style="position: relative; padding: 128px 32px 0 32px; height: 100%; display: flex; flex-direction: column; gap: 10px; overflow: hidden;">
+    <div style="position: relative; padding: 183px 47px 0 47px; height: 100%; display: flex; flex-direction: column; gap: 10px; overflow: hidden;">
       <div style="border-radius: 14px; border: 2px solid #c08b4b; border-bottom: 4px solid #8a5a2b; background: #f6e7c8; padding: 10px; text-align: center;">
         <span style="font-size: 13px; color: #4a2f16;">3 quêtes accomplies sur 5.</span>
       </div>
@@ -109,7 +108,7 @@
 
   <!-- ONGLET OLYMPE — la grille des dieux, puis la fiche de celui qu'on regarde. -->
   <sc-if value="{{isOlympe}}" hint-placeholder-val="{{ false }}">
-    <div style="position: relative; padding: 128px 32px 0 32px; height: 100%; display: flex; flex-direction: column; gap: 10px; overflow: hidden;">
+    <div style="position: relative; padding: 183px 47px 0 47px; height: 100%; display: flex; flex-direction: column; gap: 10px; overflow: hidden;">
       <div style="display: flex; flex-wrap: wrap; gap: 8px; justify-content: center;">
         <sc-for list="{{roster}}" as="g" hint-placeholder-count="6">
           <div style="width: 22%; min-width: 62px; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 8px 2px; border-radius: 14px; border: 2px solid {{g.border}}; border-bottom: 4px solid #8a5a2b; background: {{g.bg}};">
@@ -144,7 +143,7 @@
 
   <!-- ONGLET PASSE — la frise des paliers, deux voies. -->
   <sc-if value="{{isPasse}}" hint-placeholder-val="{{ false }}">
-    <div style="position: relative; padding: 128px 24px 0 24px; height: 100%; display: flex; flex-direction: column; gap: 12px; overflow: hidden;">
+    <div style="position: relative; padding: 183px 39px 0 39px; height: 100%; display: flex; flex-direction: column; gap: 12px; overflow: hidden;">
       <div style="flex-grow: 1; border-radius: 14px; border: 2px solid #c08b4b; border-bottom: 4px solid #8a5a2b; background: #f6e7c8; padding: 12px; display: flex; flex-direction: column; gap: 8px;">
         <div style="display: flex; gap: 6px;">
           <sc-for list="{{friseTop}}" as="s" hint-placeholder-count="4">
@@ -175,7 +174,7 @@
 
   <!-- ONGLET BOUTIQUE -->
   <sc-if value="{{isBoutique}}" hint-placeholder-val="{{ false }}">
-    <div style="position: relative; padding: 128px 32px 0 32px; height: 100%; display: flex; flex-direction: column; gap: 10px; overflow: hidden;">
+    <div style="position: relative; padding: 183px 47px 0 47px; height: 100%; display: flex; flex-direction: column; gap: 10px; overflow: hidden;">
       <span style="font-size: 11px; font-weight: 800; letter-spacing: 1.4px; color: #5f3b18;">DIVINITÉS</span>
       <sc-for list="{{shopGods}}" as="god" hint-placeholder-count="3">
         <div style="border-radius: 14px; border: 2px solid #c08b4b; border-bottom: 4px solid #8a5a2b; background: #f6e7c8; padding: 10px; display: flex; align-items: center; gap: 10px;">
@@ -204,67 +203,58 @@
     </div>
   </sc-if>
 
-  <!-- BANDEAU DU HAUT — bandeau2, le cadre gravé, ÉTIRÉ SUR TOUTE LA
-       LARGEUR de l'appli, collé au bord supérieur de l'écran : le même
-       dessin (ligue.png) que le bandeau de ligue de PlayTab, réutilisé pour
-       porter le portrait, le nom, les deux bourses et les réglages
-       (TopBar.tsx). Il ne bouge JAMAIS avec le ruban d'onglets. -->
-  <div style="position: absolute; top: 0; left: 0; right: 0; height: 118px; z-index: 3;">
-    <img src="ligue.jpg" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: fill;" />
-    <div style="position: relative; height: 100%; display: flex; align-items: flex-end; padding: 0 16px 14px 74px; gap: 8px;">
-      <div style="padding: 8px 14px; border-radius: 999px; background: #5b3f22; border: 2px solid #eec24a;">
-        <span style="color: #f7e9cd; font-size: 13px; font-weight: 600;">Hermès</span>
-      </div>
-      <div style="flex-grow: 1;"></div>
-      <div style="display: flex; align-items: center; gap: 4px; padding: 3px 6px 3px 10px; border-radius: 999px; background: #5b3f22; border: 2px solid #eec24a;">
-        <span style="color: #f7e9cd; font-size: 13px; font-weight: 700;">2 480</span>
-        <div style="width: 22px; height: 22px; border-radius: 11px; background: #eec24a; display: flex; align-items: center; justify-content: center; font-size: 12px;">🪙</div>
-      </div>
-      <div style="display: flex; align-items: center; gap: 4px; padding: 3px 6px 3px 10px; border-radius: 999px; background: #5b3f22; border: 2px solid #5f8d4e;">
-        <span style="color: #f7e9cd; font-size: 13px; font-weight: 700;">6</span>
-        <div style="width: 22px; height: 22px; border-radius: 11px; background: #a7c98b; display: flex; align-items: center; justify-content: center; font-size: 12px;">🏆</div>
-      </div>
-      <div style="width: 38px; height: 38px; border-radius: 19px; background: #5b3f22; border: 2px solid #eec24a; display: flex; align-items: center; justify-content: center;">
-        <span style="color: #f7e9cd; font-size: 20px;">≡</span>
-      </div>
+  <!-- BANDEAU DU HAUT — assets/ui/bandeau2.png, ÉTIRÉ SUR TOUTE LA LARGEUR
+       de l'appli, collé au bord supérieur de l'écran. Le dessin porte déjà
+       l'anneau du portrait, la languette du nom et les deux bourses : il
+       ne reste qu'à poser les valeurs et le bouton des réglages par-dessus.
+       Il ne bouge JAMAIS avec le ruban d'onglets. -->
+  <div style="position: absolute; top: 0; left: 0; right: 0; height: 79px; z-index: 3;">
+    <img src="bandeau2.jpg" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: fill;" />
+    <!-- Le nom, dans la languette gravée : 19,7 % à 45,2 % de la largeur,
+         16,1 % à 52,8 % de la hauteur, mesurés sur le dessin. -->
+    <div style="position: absolute; left: 19.7%; right: 54.8%; top: 16.1%; bottom: 47.2%; display: flex; align-items: center; justify-content: center;">
+      <span style="color: #4a2f16; font-family: Cinzel, Georgia, serif; font-size: 12px; font-weight: 700;">Hermès</span>
+    </div>
+    <!-- La valeur de chaque monnaie, dans le rectangle sombre laissé vide
+         entre son jeton et son bouton « + » : 49,8 % à 69,3 % pour l'or,
+         69,3 % à 81,2 % pour les lauriers. -->
+    <div style="position: absolute; left: 51%; right: 31%; top: 22%; bottom: 22%; display: flex; align-items: center; justify-content: center;">
+      <span style="color: #f3ead8; font-size: 13px; font-weight: 700;">2 480</span>
+    </div>
+    <div style="position: absolute; left: 70%; right: 18.8%; top: 22%; bottom: 22%; display: flex; align-items: center; justify-content: center;">
+      <span style="color: #f3ead8; font-size: 13px; font-weight: 700;">6</span>
+    </div>
+    <!-- Les réglages : le dessin ne porte pas de bouton pour eux, on en
+         pose un à sa place naturelle, à l'extrême droite du bandeau. -->
+    <div onClick="{{openSettings}}" style="position: absolute; right: 3%; top: 50%; margin-top: -15px; width: 30px; height: 30px; border-radius: 15px; background: #5b3f22; border: 2px solid #eec24a; display: flex; align-items: center; justify-content: center; cursor: pointer;">
+      <span style="color: #f7e9cd; font-size: 16px;">≡</span>
     </div>
   </div>
-  <!-- Le portrait du dieu, en médaillon HORS FLUX, posé par-dessus le
-       bandeau : il déborde sur le décor exactement comme dans TopBar.tsx. -->
-  <div style="position: absolute; top: 40px; left: 20px; width: 56px; height: 56px; border-radius: 28px; background: #1d84b5; border: 3px solid #eec24a; z-index: 4; display: flex; align-items: center; justify-content: center;">
+  <!-- Le portrait du dieu, dans l'anneau déjà dessiné sur bandeau2.png :
+       10,1 % de la largeur, 42,4 % de la hauteur pour son centre, 72,6 %
+       de la hauteur du bandeau pour son diamètre. -->
+  <div style="position: absolute; top: 4.8%; left: 2.7%; width: 57px; height: 57px; border-radius: 29px; background: #1d84b5; z-index: 4; display: flex; align-items: center; justify-content: center;">
     <div style="width: 19px; height: 19px; border-radius: 10px; background: #7dd3fc;"></div>
-    <div style="position: absolute; bottom: -10px; padding: 1px 8px; border-radius: 8px; background: #5b3f22; border: 1.5px solid #eec24a;">
-      <span style="color: #f7e9cd; font-size: 9px; font-weight: 700;">Niv 4</span>
-    </div>
   </div>
 
-  <!-- BARRE D'ONGLETS — pareil qu'en haut : le bandeau du bas COUVRE TOUTE
-       LA LARGEUR de l'appli, collé au bord inférieur de l'écran. Quatre
-       dalles (Quêtes, Olympe · Passe, Boutique) réparties en deux groupes
-       symétriques, et le médaillon « Jouer » qui flotte au centre, à
-       cheval sur la barre — MenuScreen.tsx (`TabBar`). -->
-  <div style="position: absolute; left: 0; right: 0; bottom: 0; height: 82px; background: #5b3f22; border-top: 3px solid #c08b4b; display: flex; padding: 4px 8px 0 8px; z-index: 3;">
-    <div style="flex: 1; display: flex;">
-      <sc-for list="{{tabsLeft}}" as="tab" hint-placeholder-count="2">
-        <div onClick="{{tab.pick}}" style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; cursor: pointer;">
-          <span style="font-size: 20px; opacity: {{tab.iconOpacity}};">{{tab.icon}}</span>
-          <span style="color: {{tab.color}}; font-size: 11px; font-weight: {{tab.weight}};">{{tab.label}}</span>
+  <!-- BARRE D'ONGLETS — pareil qu'en haut : assets/ui/onglets.jpg, la
+       frise des cinq onglets DÉJÀ DESSINÉE (icône + libellé), étirée sur
+       toute la largeur de l'appli et collée au bord inférieur de l'écran.
+       Les cinq dalles étant des tuiles égales de l'image, on pose juste
+       cinq zones cliquables par-dessus, et un liseré d'or sous celle qui
+       est active — MenuScreen.tsx (`TabBar`), mais sans médaillon surélevé :
+       le dessin traite déjà « Jouer » comme les quatre autres. -->
+  <div style="position: absolute; left: 0; right: 0; bottom: 0; height: 78px; z-index: 3;">
+    <img src="onglets.jpg" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: fill;" />
+    <div style="position: relative; height: 100%; display: flex;">
+      <sc-for list="{{tabs}}" as="tab" hint-placeholder-count="5">
+        <div onClick="{{tab.pick}}" style="flex: 1; height: 100%; position: relative; cursor: pointer;">
+          <sc-if value="{{tab.active}}" hint-placeholder-val="{{ false }}">
+            <div style="position: absolute; inset: 0; background: rgba(238,194,74,0.22); border-top: 3px solid #eec24a;"></div>
+          </sc-if>
         </div>
       </sc-for>
     </div>
-    <div style="width: 94px;"></div>
-    <div style="flex: 1; display: flex;">
-      <sc-for list="{{tabsRight}}" as="tab" hint-placeholder-count="2">
-        <div onClick="{{tab.pick}}" style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; cursor: pointer;">
-          <span style="font-size: 20px; opacity: {{tab.iconOpacity}};">{{tab.icon}}</span>
-          <span style="color: {{tab.color}}; font-size: 11px; font-weight: {{tab.weight}};">{{tab.label}}</span>
-        </div>
-      </sc-for>
-    </div>
-  </div>
-  <div onClick="{{goJouer}}" style="position: absolute; left: 50%; margin-left: -43px; bottom: 60px; width: 86px; height: 86px; border-radius: 43px; border: 4px solid #5f3b18; display: flex; align-items: center; justify-content: center; flex-direction: column; cursor: pointer; z-index: 4; background: {{medallionBg}};">
-    <span style="font-size: 26px;">⚔️</span>
-    <span style="font-family: Cinzel, Georgia, serif; font-size: 11px; font-weight: 700; color: #4a2f10; letter-spacing: 1px;">JOUER</span>
   </div>
 </div>
 </x-dc>
@@ -279,24 +269,15 @@ class Component extends DCLogic {
   renderVals() {
     const tab = this.state.tab;
     const gold = '#eec24a';
-    const onDark = '#f7e9cd';
 
     // Ordre réel du ruban : Quêtes, Olympe, Jouer (au milieu), Passe,
-    // Boutique — MenuScreen.tsx (`TABS`). Deux dalles de chaque côté du
-    // médaillon, pour que la barre reste symétrique.
-    const TABS = [
-      { id: 'quetes', label: 'Quêtes', icon: '📜' },
-      { id: 'olympe', label: 'Olympe', icon: '🏛️' },
-      { id: 'passe', label: 'Passe', icon: '⛑️' },
-      { id: 'boutique', label: 'Boutique', icon: '🏺' },
-    ].map((t) => ({
-      id: t.id,
-      label: t.label,
-      icon: t.icon,
-      iconOpacity: tab === t.id ? '1' : '0.75',
-      color: tab === t.id ? '#eec24a' : onDark,
-      weight: tab === t.id ? '700' : '600',
-      pick: () => this.setState({ tab: t.id }),
+    // Boutique — MenuScreen.tsx (`TABS`). L'image (assets/ui/onglets.jpg)
+    // dessine déjà les cinq tuiles dans cet ordre, icône et libellé
+    // compris : on ne pose que le liseré d'or de l'onglet actif par-dessus.
+    const TABS = ['quetes', 'olympe', 'jouer', 'passe', 'boutique'].map((id) => ({
+      id,
+      active: tab === id,
+      pick: () => this.setState({ tab: id }),
     }));
 
     const titles = {
@@ -327,10 +308,8 @@ class Component extends DCLogic {
       tabTitle: titles[tab] ?? '',
       wallpaperSrc: tab === 'jouer' ? 'wallpaper1.jpg' : 'wallpaper2.jpg',
 
-      tabsLeft: TABS.slice(0, 2),
-      tabsRight: TABS.slice(2, 4),
-      goJouer: () => this.setState({ tab: 'jouer' }),
-      medallionBg: tab === 'jouer' ? 'linear-gradient(#f8e08a, #eec24a)' : 'linear-gradient(#fdf4e0, #e2cda4)',
+      tabs: TABS,
+      openSettings: () => undefined,
 
       chapters: [
         { icon: '🏛️', label: 'Agora', border: gold, bg: '#fdf4e0', opacity: '1', textColor: '#4a2f16' },
