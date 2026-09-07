@@ -122,7 +122,11 @@ export function TopBar({
       {insets.top > 0 && (
         <LinearGradient
           pointerEvents="none"
-          colors={['rgba(0, 0, 0, 0.92)', 'rgba(0, 0, 0, 0)']}
+          // Trois arrêts, pas deux : le noir tient jusqu'au tiers de la
+          // marge avant de s'effacer, au lieu de se diluer tout du long — le
+          // fondu file plus vite vers le noir près du bord de l'écran.
+          colors={['rgba(0, 0, 0, 0.92)', 'rgba(0, 0, 0, 0.92)', 'rgba(0, 0, 0, 0)']}
+          locations={[0, 0.35, 1]}
           style={{ position: 'absolute', top: 0, left: 0, right: 0, height: insets.top }}
         />
       )}

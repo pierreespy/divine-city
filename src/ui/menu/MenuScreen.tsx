@@ -294,7 +294,11 @@ export function MenuScreen({
       {insets.bottom > 0 && (
         <LinearGradient
           pointerEvents="none"
-          colors={['rgba(0, 0, 0, 0)', 'rgba(0, 0, 0, 0.92)']}
+          // Trois arrêts, pas deux : le noir est déjà plein aux deux tiers
+          // de la marge, et tient jusqu'au bord — le fondu file plus vite
+          // vers le noir au lieu de se diluer sur toute la hauteur.
+          colors={['rgba(0, 0, 0, 0)', 'rgba(0, 0, 0, 0.92)', 'rgba(0, 0, 0, 0.92)']}
+          locations={[0, 0.65, 1]}
           style={[styles.edgeFade, { bottom: 0, height: insets.bottom }]}
         />
       )}
