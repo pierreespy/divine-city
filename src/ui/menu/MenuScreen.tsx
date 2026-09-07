@@ -354,13 +354,28 @@ function TabBar({
     <View style={[styles.tabBar, { height }]}>
       <Image
         source={ART.onglets}
-        // `stretch` étire la frise sur toute la boîte, inset compris : le bas
-        // du dessin (déjà uni, sous les dalles) s'étire un peu plus loin
-        // plutôt que de s'arrêter net au-dessus d'une bande vide.
+        // `stretch` sur une boîte à la proportion du dessin ne déforme rien :
+        // la frise garde sa hauteur naturelle (`barHeight`), jamais celle de
+        // la boîte allongée par l'inset — l'étirer plus loin écraserait les
+        // icônes qu'elle porte.
         resizeMode="stretch"
         accessible={false}
         importantForAccessibility="no"
-        style={{ position: 'absolute', left: 0, top: 0, width: pageWidth, height }}
+        style={{ position: 'absolute', left: 0, top: 0, width: pageWidth, height: barHeight }}
+      />
+      {/* Le prolongement dans la zone de sécurité : du bois uni, la couleur
+          du bandeau et de la barre (`COLORS.bar`), plutôt qu'un étirement du
+          dessin qui déformerait ses icônes. */}
+      <View
+        pointerEvents="none"
+        style={{
+          position: 'absolute',
+          left: 0,
+          right: 0,
+          top: barHeight,
+          height: insets.bottom,
+          backgroundColor: COLORS.bar,
+        }}
       />
 
       <Animated.View
