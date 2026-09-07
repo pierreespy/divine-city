@@ -114,6 +114,9 @@ const FRAME = {
  */
 const TAB_BAR_HEIGHT = 928 / 4640;
 
+/** Hauteur du fondu au noir, en haut et en bas, en fractions de l'écran. */
+const SCREEN_FADE_HEIGHT = 0.1;
+
 /**
  * L'ordre à l'écran, de gauche à droite. « Jouer » au milieu, encadré par
  * deux dalles de chaque côté.
@@ -155,7 +158,7 @@ export function MenuScreen({
   showStats,
   onToggleStats,
 }: Props) {
-  const { width } = useWindowDimensions();
+  const { width, height } = useWindowDimensions();
   const pageWidth = Math.max(1, Math.round(width));
 
   /** L'onglet « arrêté ». Sert à l'accessibilité, pas au dessin du ruban. */
@@ -285,6 +288,21 @@ export function MenuScreen({
 
         <TabBar index={index} pageWidth={pageWidth} scrollX={scrollX} onGo={goTo} />
       </SafeAreaView>
+
+      {/* Le fondu au noir, en haut et en bas de l'écran ENTIER — par-dessus le
+          bandeau et la barre d'onglets, pas seulement le décor qui défile.
+          `pointerEvents="none"` : ce ne sont que des voiles, ils ne doivent
+          jamais voler un appui destiné à ce qu'ils recouvrent. */}
+      <LinearGradient
+        pointerEvents="none"
+        colors={['rgba(0, 0, 0, 0.5)', 'rgba(0, 0, 0, 0)']}
+        style={[styles.edgeFade, { top: 0, height: SCREEN_FADE_HEIGHT * height }]}
+      />
+      <LinearGradient
+        pointerEvents="none"
+        colors={['rgba(0, 0, 0, 0)', 'rgba(0, 0, 0, 0.5)']}
+        style={[styles.edgeFade, { bottom: 0, height: SCREEN_FADE_HEIGHT * height }]}
+      />
 
       <SettingsSheet
         visible={settingsOpen}
@@ -578,6 +596,8 @@ const styles = StyleSheet.create({
   safe: { flex: 1 },
 
   backdrop: { position: 'absolute', top: 0, bottom: 0, left: 0, flexDirection: 'row' },
+
+  edgeFade: { position: 'absolute', left: 0, right: 0 },
 
   // La nef : le ruban et ses pages.
   nave: { flex: 1 },
