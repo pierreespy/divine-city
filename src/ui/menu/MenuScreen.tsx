@@ -294,11 +294,12 @@ export function MenuScreen({
       {insets.bottom > 0 && (
         <LinearGradient
           pointerEvents="none"
-          // Trois arrêts, pas deux : le noir est déjà plein aux deux tiers
-          // de la marge, et tient jusqu'au bord — le fondu file plus vite
-          // vers le noir au lieu de se diluer sur toute la hauteur.
-          colors={['rgba(0, 0, 0, 0)', 'rgba(0, 0, 0, 0.92)', 'rgba(0, 0, 0, 0.92)']}
-          locations={[0, 0.65, 1]}
+          // Part du bois de la barre d'onglets (`COLORS.bar`) juste sous le
+          // dessin, pour filer vite vers le noir près du bord de l'écran —
+          // pas un flou vers le transparent, un vrai dégradé d'une couleur
+          // à l'autre.
+          colors={[COLORS.bar, 'rgba(0, 0, 0, 1)', 'rgba(0, 0, 0, 1)']}
+          locations={[0, 0.35, 1]}
           style={[styles.edgeFade, { bottom: 0, height: insets.bottom }]}
         />
       )}
