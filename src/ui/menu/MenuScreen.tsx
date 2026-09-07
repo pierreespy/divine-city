@@ -109,10 +109,11 @@ const FRAME = {
 } as const;
 
 /**
- * La barre d'onglets dessinée (`ART.onglets`, 4640 × 928) : sa hauteur en
- * largeurs d'écran, soit exactement un cinquième — cinq dalles carrées.
+ * La barre d'onglets dessinée (`ART.onglets`, 1608 × 320) : sa hauteur en
+ * largeurs d'écran, mesurée sur le dessin — presque un cinquième, comme cinq
+ * dalles quasi carrées.
  */
-const TAB_BAR_HEIGHT = 928 / 4640;
+const TAB_BAR_HEIGHT = 320 / 1608;
 
 /**
  * L'ordre à l'écran, de gauche à droite. « Jouer » au milieu, encadré par
