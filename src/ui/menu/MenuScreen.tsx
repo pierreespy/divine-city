@@ -49,7 +49,7 @@ import {
   View,
   useWindowDimensions,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { ART } from './icons';
 import type { GodId } from '../../entities/gods/roster';
@@ -228,7 +228,11 @@ export function MenuScreen({
           marge de la barre d'état (voir `TopBar`). Réservée à ce niveau, elle
           laissait une bande de fond clair au-dessus du cadre, et une seconde
           entre son bas et le décor. */}
-      <SafeAreaView style={styles.safe} edges={['bottom']}>
+      {/* ⚠️ 'bottom' n'est plus dans `edges` : la marge de sécurité du bas
+          n'est plus un padding ajouté après la barre, elle est absorbée par
+          la barre elle-même (voir `TabBar`), pour que le dessin descende
+          jusqu'au bord au lieu de laisser une bande de fond nue en dessous. */}
+      <SafeAreaView style={styles.safe} edges={[]}>
         <TopBar
           state={state}
           onOpenSettings={() => setSettingsOpen(true)}
@@ -334,7 +338,15 @@ function TabBar({
   scrollX: Animated.Value;
   onGo: (id: MenuTab) => void;
 }) {
-  const height = pageWidth * TAB_BAR_HEIGHT;
+  const insets = useSafeAreaInsets();
+  // La hauteur de la frise dessinée, mesurée sur l'image (inchangée) : les
+  // cinq dalles cliquables restent à cette hauteur-là, pouce compris.
+  const barHeight = pageWidth * TAB_BAR_HEIGHT;
+  // ⚠️ La boîte, elle, descend plus bas, de l'inset de sécurité du bas
+  // (home indicator, geste Android) : sans ça, le dessin s'arrête avant le
+  // bord et laisse une bande de fond nue entre lui et le bord de l'écran.
+  // Le haut de la barre ne bouge pas — c'est seulement son bas qui s'allonge.
+  const height = barHeight + insets.bottom;
   const cell = pageWidth / TABS.length;
   const last = TABS.length - 1;
 
@@ -342,9 +354,9 @@ function TabBar({
     <View style={[styles.tabBar, { height }]}>
       <Image
         source={ART.onglets}
-        // `stretch` sur une boîte déjà à la proportion du dessin ne déforme
-        // rien : la frise est étirée d'un bord à l'autre de l'écran, comme
-        // le bandeau du haut.
+        // `stretch` étire la frise sur toute la boîte, inset compris : le bas
+        // du dessin (déjà uni, sous les dalles) s'étire un peu plus loin
+        // plutôt que de s'arrêter net au-dessus d'une bande vide.
         resizeMode="stretch"
         accessible={false}
         importantForAccessibility="no"
@@ -357,10 +369,13 @@ function TabBar({
           styles.glow,
           {
             width: cell,
-            height: height * 1.2,
+            height: barHeight * 1.2,
             // La lueur déborde en bas : son centre tombe aux six dixièmes de
-            // la dalle, là où se trouve l'icône du dessin.
-            top: height * 0.05,
+            // la dalle, là où se trouve l'icône du dessin. Elle se règle sur
+            // `barHeight`, pas sur la boîte allongée par l'inset : sinon la
+            // lueur descendrait dans la zone de sécurité, où il n'y a plus
+            // d'icône à éclairer.
+            top: barHeight * 0.05,
             borderRadius: cell / 2,
             transform: [
               {
@@ -382,7 +397,10 @@ function TabBar({
         />
       </Animated.View>
 
-      <View style={styles.tabRow}>
+      {/* Les cinq zones cliquables s'arrêtent à `barHeight` : c'est la
+          hauteur de la frise dessinée, pas celle de la boîte allongée par
+          l'inset — le pouce ne doit pas taper dans la zone de sécurité. */}
+      <View style={[styles.tabRow, { height: barHeight }]}>
         {TABS.map((tab, i) => (
           <Pressable
             key={tab.id}
