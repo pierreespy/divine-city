@@ -7,14 +7,14 @@ plus les paramètres et la fiche d'un dieu.
 Canvas publié : <https://claude.ai/code/artifact/db1f90be-13de-4bae-a869-5195698f5cea>
 
 **2026-09-06 — révision** : trois nouveaux dessins (`assets/ui/bandeau2.png`,
-`assets/ui/maquette.png`, `assets/ui/onglets.jpg`) remplacent l'ancien menu à
+`assets/ui/maquette.png`, `assets/ui/onglets_final.png`) remplacent l'ancien menu à
 trois onglets de `Main.dc.html` :
 
 - **`bandeau2.png`** — le bandeau du haut, étiré d'un bord à l'autre de
   l'écran et collé à son bord supérieur. Il porte déjà l'anneau du
   portrait, la languette du nom et les deux bourses (or, lauriers) ; la
   maquette ne pose que les valeurs et le bouton des réglages par-dessus ;
-- **`onglets.jpg`** — pareil, mais pour la barre du bas : une frise des
+- **`onglets_final.png`** — pareil, mais pour la barre du bas : une frise des
   cinq onglets DÉJÀ DESSINÉE, icône et libellé compris, étirée sur toute
   la largeur de l'appli. La maquette pose juste les cinq zones cliquables
   et le liseré d'or de l'onglet actif ;
@@ -33,7 +33,7 @@ célestes » :
   leurs boutons « + » ; l'écran ne pose que les valeurs, le portrait, le
   rang et les zones cliquables, en fractions de la largeur mesurées sur
   l'image ;
-- `onglets.jpg` remplace la barre composée de `MenuScreen.tsx`. Le
+- `onglets_final.png` remplace la barre composée de `MenuScreen.tsx`. Le
   médaillon « Jouer » en relief a DISPARU : le dessin traite les cinq
   dalles à égalité, et l'onglet actif se marque par une lueur chaude qui
   suit le doigt ;
@@ -58,7 +58,7 @@ qu'aucun système ne peut accorder quoi que ce soit (voir l'en-tête de
 | `canvas.json` | La disposition des trois écrans sur le canvas |
 | `wallpaper1.jpg` / `wallpaper2.jpg` | Le décor du menu — `assets/wallpaper1.png` / `wallpaper2.png` réduits |
 | `bandeau2.jpg` | Le bandeau du haut — `assets/ui/bandeau2.png` réduit, recadré sur sa zone visible |
-| `onglets.jpg` | La barre d'onglets du bas — `assets/ui/onglets.jpg` réduit |
+| `onglets_final.png` | La barre d'onglets du bas — `assets/ui/onglets_final.png` |
 | `maquette.jpg` | Le cadre qui encadre chaque onglet sauf « Jouer » — `assets/ui/maquette.png` réduit |
 | `ligue.jpg` | Le cadre gravé de la carte « course sacrée », sur l'onglet Jouer — `assets/ui/ligue.png` réduit |
 
