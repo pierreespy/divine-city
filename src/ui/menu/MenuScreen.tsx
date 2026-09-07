@@ -15,7 +15,7 @@
  * au démarrage, et deux dalles le bordent de chaque côté : aucun onglet n'est
  * à plus de deux glissements de pouce, et la barre est symétrique.
  *
- * ⚠️ La barre d'onglets est DESSINÉE d'un seul tenant (`assets/ui/onglets.jpg`) :
+ * ⚠️ La barre d'onglets est DESSINÉE d'un seul tenant (`assets/ui/onglets_final.png`) :
  * les cinq dalles, leur icône et leur libellé sont dans l'image, dans l'ordre
  * du ruban. L'écran ne pose que cinq zones cliquables et la LUEUR de l'onglet
  * actif — d'où la disparition du médaillon « Jouer » : le dessin traite les
@@ -109,10 +109,10 @@ const FRAME = {
 } as const;
 
 /**
- * La barre d'onglets dessinée (`ART.onglets`, 1556 × 306) : sa hauteur en
+ * La barre d'onglets dessinée (`ART.onglets`, 1080 × 500) : sa hauteur en
  * largeurs d'écran, mesurée sur le dessin.
  */
-const TAB_BAR_HEIGHT = 306 / 1556;
+const TAB_BAR_HEIGHT = 500 / 1080;
 
 /**
  * L'ordre à l'écran, de gauche à droite. « Jouer » au milieu, encadré par
