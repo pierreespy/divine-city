@@ -15,7 +15,7 @@
  * au démarrage, et deux dalles le bordent de chaque côté : aucun onglet n'est
  * à plus de deux glissements de pouce, et la barre est symétrique.
  *
- * ⚠️ La barre d'onglets est DESSINÉE d'un seul tenant (`assets/ui/onglets.png`) :
+ * ⚠️ La barre d'onglets est DESSINÉE d'un seul tenant (`assets/ui/onglets.jpg`) :
  * les cinq dalles, leur icône et leur libellé sont dans l'image, dans l'ordre
  * du ruban. L'écran ne pose que cinq zones cliquables et la LUEUR de l'onglet
  * actif — d'où la disparition du médaillon « Jouer » : le dessin traite les
@@ -49,7 +49,7 @@ import {
   View,
   useWindowDimensions,
 } from 'react-native';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { ART } from './icons';
 import type { GodId } from '../../entities/gods/roster';
@@ -109,10 +109,10 @@ const FRAME = {
 } as const;
 
 /**
- * La barre d'onglets dessinée (`ART.onglets`, 1556 × 306) : sa hauteur en
- * largeurs d'écran, mesurée sur le dessin.
+ * La barre d'onglets dessinée (`ART.onglets`, 4640 × 928) : sa hauteur en
+ * largeurs d'écran, soit exactement un cinquième — cinq dalles carrées.
  */
-const TAB_BAR_HEIGHT = 306 / 1556;
+const TAB_BAR_HEIGHT = 928 / 4640;
 
 /**
  * L'ordre à l'écran, de gauche à droite. « Jouer » au milieu, encadré par
@@ -228,11 +228,7 @@ export function MenuScreen({
           marge de la barre d'état (voir `TopBar`). Réservée à ce niveau, elle
           laissait une bande de fond clair au-dessus du cadre, et une seconde
           entre son bas et le décor. */}
-      {/* ⚠️ 'bottom' n'est plus dans `edges` : la marge de sécurité du bas
-          n'est plus un padding ajouté après la barre, elle est absorbée par
-          la barre elle-même (voir `TabBar`), pour que le dessin descende
-          jusqu'au bord au lieu de laisser une bande de fond nue en dessous. */}
-      <SafeAreaView style={styles.safe} edges={[]}>
+      <SafeAreaView style={styles.safe} edges={['bottom']}>
         <TopBar
           state={state}
           onOpenSettings={() => setSettingsOpen(true)}
@@ -338,16 +334,7 @@ function TabBar({
   scrollX: Animated.Value;
   onGo: (id: MenuTab) => void;
 }) {
-  const insets = useSafeAreaInsets();
-  // La hauteur de la frise dessinée, mesurée sur l'image : les cinq dalles
-  // cliquables s'y arrêtent, pouce compris — la zone de sécurité en dessous
-  // ne doit jamais capter un appui.
-  const barHeight = pageWidth * TAB_BAR_HEIGHT;
-  // ⚠️ La boîte, elle, descend jusqu'au bord de l'écran, inset compris : le
-  // dessin y est ÉTIRÉ (voir `<Image>` ci-dessous), pour qu'aucune bande de
-  // fond nue ne reste visible sous la barre. Le haut ne bouge pas — c'est son
-  // bas qui s'allonge.
-  const height = barHeight + insets.bottom;
+  const height = pageWidth * TAB_BAR_HEIGHT;
   const cell = pageWidth / TABS.length;
   const last = TABS.length - 1;
 
@@ -355,9 +342,9 @@ function TabBar({
     <View style={[styles.tabBar, { height }]}>
       <Image
         source={ART.onglets}
-        // `stretch` sur toute la boîte, inset compris : le dessin descend
-        // jusqu'au bord de l'écran, quitte à étirer légèrement le bas des
-        // dalles plutôt que de laisser une bande vide en dessous.
+        // `stretch` sur une boîte déjà à la proportion du dessin ne déforme
+        // rien : la frise est étirée d'un bord à l'autre de l'écran, comme
+        // le bandeau du haut.
         resizeMode="stretch"
         accessible={false}
         importantForAccessibility="no"
@@ -370,13 +357,10 @@ function TabBar({
           styles.glow,
           {
             width: cell,
-            height: barHeight * 1.2,
+            height: height * 1.2,
             // La lueur déborde en bas : son centre tombe aux six dixièmes de
-            // la dalle, là où se trouve l'icône du dessin. Elle se règle sur
-            // `barHeight`, pas sur la boîte allongée par l'inset : sinon la
-            // lueur descendrait dans la zone de sécurité, où il n'y a plus
-            // d'icône à éclairer.
-            top: barHeight * 0.05,
+            // la dalle, là où se trouve l'icône du dessin.
+            top: height * 0.05,
             borderRadius: cell / 2,
             transform: [
               {
@@ -398,10 +382,7 @@ function TabBar({
         />
       </Animated.View>
 
-      {/* Les cinq zones cliquables s'arrêtent à `barHeight` : c'est la
-          hauteur de la frise dessinée, pas celle de la boîte allongée par
-          l'inset — le pouce ne doit pas taper dans la zone de sécurité. */}
-      <View style={[styles.tabRow, { height: barHeight }]}>
+      <View style={styles.tabRow}>
         {TABS.map((tab, i) => (
           <Pressable
             key={tab.id}
