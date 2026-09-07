@@ -378,7 +378,6 @@ function TabBar({
             // La lueur déborde en bas : son centre tombe aux six dixièmes de
             // la dalle, là où se trouve l'icône du dessin.
             top: height * 0.05,
-            borderRadius: cell / 2,
             transform: [
               {
                 translateX: scrollX.interpolate({
