@@ -62,7 +62,7 @@ export const ART = {
   maquette: require('../../../assets/ui/maquette.png') as ImageSourcePropType,
   /**
    * La barre d'onglets ENTIÈRE : les cinq dalles, icône et libellé compris,
-   * dans l'ordre du ruban (1608 × 320). L'écran ne pose que les zones
+   * dans l'ordre du ruban (1556 × 306). L'écran ne pose que les zones
    * cliquables et la lueur de l'onglet actif.
    */
   onglets: require('../../../assets/ui/onglets.png') as ImageSourcePropType,

@@ -109,11 +109,10 @@ const FRAME = {
 } as const;
 
 /**
- * La barre d'onglets dessinée (`ART.onglets`, 1608 × 320) : sa hauteur en
- * largeurs d'écran, mesurée sur le dessin — presque un cinquième, comme cinq
- * dalles quasi carrées.
+ * La barre d'onglets dessinée (`ART.onglets`, 1556 × 306) : sa hauteur en
+ * largeurs d'écran, mesurée sur le dessin.
  */
-const TAB_BAR_HEIGHT = 320 / 1608;
+const TAB_BAR_HEIGHT = 306 / 1556;
 
 /**
  * L'ordre à l'écran, de gauche à droite. « Jouer » au milieu, encadré par
@@ -340,13 +339,14 @@ function TabBar({
   onGo: (id: MenuTab) => void;
 }) {
   const insets = useSafeAreaInsets();
-  // La hauteur de la frise dessinée, mesurée sur l'image (inchangée) : les
-  // cinq dalles cliquables restent à cette hauteur-là, pouce compris.
+  // La hauteur de la frise dessinée, mesurée sur l'image : les cinq dalles
+  // cliquables s'y arrêtent, pouce compris — la zone de sécurité en dessous
+  // ne doit jamais capter un appui.
   const barHeight = pageWidth * TAB_BAR_HEIGHT;
-  // ⚠️ La boîte, elle, descend plus bas, de l'inset de sécurité du bas
-  // (home indicator, geste Android) : sans ça, le dessin s'arrête avant le
-  // bord et laisse une bande de fond nue entre lui et le bord de l'écran.
-  // Le haut de la barre ne bouge pas — c'est seulement son bas qui s'allonge.
+  // ⚠️ La boîte, elle, descend jusqu'au bord de l'écran, inset compris : le
+  // dessin y est ÉTIRÉ (voir `<Image>` ci-dessous), pour qu'aucune bande de
+  // fond nue ne reste visible sous la barre. Le haut ne bouge pas — c'est son
+  // bas qui s'allonge.
   const height = barHeight + insets.bottom;
   const cell = pageWidth / TABS.length;
   const last = TABS.length - 1;
@@ -355,28 +355,13 @@ function TabBar({
     <View style={[styles.tabBar, { height }]}>
       <Image
         source={ART.onglets}
-        // `stretch` sur une boîte à la proportion du dessin ne déforme rien :
-        // la frise garde sa hauteur naturelle (`barHeight`), jamais celle de
-        // la boîte allongée par l'inset — l'étirer plus loin écraserait les
-        // icônes qu'elle porte.
+        // `stretch` sur toute la boîte, inset compris : le dessin descend
+        // jusqu'au bord de l'écran, quitte à étirer légèrement le bas des
+        // dalles plutôt que de laisser une bande vide en dessous.
         resizeMode="stretch"
         accessible={false}
         importantForAccessibility="no"
-        style={{ position: 'absolute', left: 0, top: 0, width: pageWidth, height: barHeight }}
-      />
-      {/* Le prolongement dans la zone de sécurité : du bois uni, la couleur
-          du bandeau et de la barre (`COLORS.bar`), plutôt qu'un étirement du
-          dessin qui déformerait ses icônes. */}
-      <View
-        pointerEvents="none"
-        style={{
-          position: 'absolute',
-          left: 0,
-          right: 0,
-          top: barHeight,
-          height: insets.bottom,
-          backgroundColor: COLORS.bar,
-        }}
+        style={{ position: 'absolute', left: 0, top: 0, width: pageWidth, height }}
       />
 
       <Animated.View
