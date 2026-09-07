@@ -62,8 +62,8 @@ export const ART = {
   maquette: require('../../../assets/ui/maquette.png') as ImageSourcePropType,
   /**
    * La barre d'onglets ENTIÈRE : les cinq dalles, icône et libellé compris,
-   * dans l'ordre du ruban (1080 × 500). L'écran ne pose que les zones
-   * cliquables et la lueur de l'onglet actif.
+   * dans l'ordre du ruban (1080 × 378, rognée de sa bande transparente).
+   * L'écran ne pose que les zones cliquables et la lueur de l'onglet actif.
    */
   onglets: require('../../../assets/ui/onglets_final.png') as ImageSourcePropType,
   /** Les dunes et leur chimère, sur la carte de la course. */

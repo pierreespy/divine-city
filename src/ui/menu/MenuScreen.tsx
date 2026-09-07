@@ -109,10 +109,15 @@ const FRAME = {
 } as const;
 
 /**
- * La barre d'onglets dessinée (`ART.onglets`, 1080 × 500) : sa hauteur en
+ * La barre d'onglets dessinée (`ART.onglets`, 1080 × 378) : sa hauteur en
  * largeurs d'écran, mesurée sur le dessin.
+ *
+ * ⚠️ Le fichier source portait une bande transparente sous le dessin
+ * (jusqu'à 500 de haut) : elle a été rognée avant l'import, sinon elle se
+ * serait vue comme un vide entre la frise et le bord de l'écran, sous
+ * `resizeMode="stretch"`.
  */
-const TAB_BAR_HEIGHT = 500 / 1080;
+const TAB_BAR_HEIGHT = 378 / 1080;
 
 /**
  * L'ordre à l'écran, de gauche à droite. « Jouer » au milieu, encadré par
