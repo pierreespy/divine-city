@@ -49,7 +49,7 @@ import {
   View,
   useWindowDimensions,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { ART } from './icons';
 import type { GodId } from '../../entities/gods/roster';
@@ -114,9 +114,6 @@ const FRAME = {
  */
 const TAB_BAR_HEIGHT = 928 / 4640;
 
-/** Hauteur du fondu au noir, en haut et en bas, en fractions de l'écran. */
-const SCREEN_FADE_HEIGHT = 0.1;
-
 /**
  * L'ordre à l'écran, de gauche à droite. « Jouer » au milieu, encadré par
  * deux dalles de chaque côté.
@@ -158,8 +155,9 @@ export function MenuScreen({
   showStats,
   onToggleStats,
 }: Props) {
-  const { width, height } = useWindowDimensions();
+  const { width } = useWindowDimensions();
   const pageWidth = Math.max(1, Math.round(width));
+  const insets = useSafeAreaInsets();
 
   /** L'onglet « arrêté ». Sert à l'accessibilité, pas au dessin du ruban. */
   const [index, setIndex] = useState(indexOf('play'));
@@ -289,20 +287,17 @@ export function MenuScreen({
         <TabBar index={index} pageWidth={pageWidth} scrollX={scrollX} onGo={goTo} />
       </SafeAreaView>
 
-      {/* Le fondu au noir, en haut et en bas de l'écran ENTIER — par-dessus le
-          bandeau et la barre d'onglets, pas seulement le décor qui défile.
-          `pointerEvents="none"` : ce ne sont que des voiles, ils ne doivent
-          jamais voler un appui destiné à ce qu'ils recouvrent. */}
-      <LinearGradient
-        pointerEvents="none"
-        colors={['rgba(0, 0, 0, 0.5)', 'rgba(0, 0, 0, 0)']}
-        style={[styles.edgeFade, { top: 0, height: SCREEN_FADE_HEIGHT * height }]}
-      />
-      <LinearGradient
-        pointerEvents="none"
-        colors={['rgba(0, 0, 0, 0)', 'rgba(0, 0, 0, 0.5)']}
-        style={[styles.edgeFade, { bottom: 0, height: SCREEN_FADE_HEIGHT * height }]}
-      />
+      {/* Le fondu au noir, dans la marge de sécurité SOUS la barre d'onglets —
+          entre son bas et le vrai bord de l'écran, pas sur la barre
+          elle-même. `pointerEvents="none"` : un voile, pas un obstacle au
+          doigt. Rien à poser si le téléphone n'a pas cette marge. */}
+      {insets.bottom > 0 && (
+        <LinearGradient
+          pointerEvents="none"
+          colors={['rgba(0, 0, 0, 0)', 'rgba(0, 0, 0, 0.92)']}
+          style={[styles.edgeFade, { bottom: 0, height: insets.bottom }]}
+        />
+      )}
 
       <SettingsSheet
         visible={settingsOpen}

@@ -27,6 +27,7 @@
 
 import { Image, Pressable, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
 import { godById } from '../../entities/gods/roster';
 import { flatColorOf, type Progression } from '../../meta/progression';
 import { rankOf } from '../../meta/rank';
@@ -114,6 +115,18 @@ export function TopBar({
 
   return (
     <View style={[styles.root, { paddingTop: insets.top }]}>
+      {/* Le fondu au noir, dans la marge de sécurité AU-DESSUS du bandeau —
+          entre le vrai bord de l'écran et le haut du dessin, pas sur le
+          bandeau lui-même. `pointerEvents="none"` : un voile, pas un
+          obstacle au doigt. */}
+      {insets.top > 0 && (
+        <LinearGradient
+          pointerEvents="none"
+          colors={['rgba(0, 0, 0, 0.92)', 'rgba(0, 0, 0, 0)']}
+          style={{ position: 'absolute', top: 0, left: 0, right: 0, height: insets.top }}
+        />
+      )}
+
       {/* ⚠️ La hauteur de cette boîte est celle de la BARRE, pas celle du
           dessin : le médaillon et la plaque du niveau en débordent par le
           bas, et c'est ce débordement qui les fait lire comme épinglés sur
