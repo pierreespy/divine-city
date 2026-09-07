@@ -353,6 +353,11 @@ function TabBar({
   // fond nue ne reste visible sous la barre. Le haut ne bouge pas — c'est son
   // bas qui s'allonge.
   const height = barHeight + insets.bottom;
+  // Le dessin est poussé vers le bas d'une fraction de sa hauteur : sur les
+  // téléphones sans encoche du bas, ça colle mieux la frise au bord de
+  // l'écran que de l'étirer. `tabBar` coupe (`overflow: 'hidden'`) ce qui en
+  // dépasse en bas — un filet de dalles, pas les icônes ni les libellés.
+  const nudgeDown = barHeight * 0.06;
   const cell = pageWidth / TABS.length;
   const last = TABS.length - 1;
 
@@ -366,7 +371,7 @@ function TabBar({
         resizeMode="stretch"
         accessible={false}
         importantForAccessibility="no"
-        style={{ position: 'absolute', left: 0, top: 0, width: pageWidth, height }}
+        style={{ position: 'absolute', left: 0, top: nudgeDown, width: pageWidth, height }}
       />
 
       <Animated.View
@@ -380,8 +385,9 @@ function TabBar({
             // la dalle, là où se trouve l'icône du dessin. Elle se règle sur
             // `barHeight`, pas sur la boîte allongée par l'inset : sinon la
             // lueur descendrait dans la zone de sécurité, où il n'y a plus
-            // d'icône à éclairer.
-            top: barHeight * 0.05,
+            // d'icône à éclairer. `nudgeDown` la suit : l'icône a bougé
+            // avec le dessin, la lueur doit rester sur elle.
+            top: barHeight * 0.05 + nudgeDown,
             borderRadius: cell / 2,
             transform: [
               {
