@@ -15,7 +15,7 @@
  * au démarrage, et deux dalles le bordent de chaque côté : aucun onglet n'est
  * à plus de deux glissements de pouce, et la barre est symétrique.
  *
- * ⚠️ La barre d'onglets est DESSINÉE d'un seul tenant (`assets/ui/onglets_final.png`) :
+ * ⚠️ La barre d'onglets est DESSINÉE d'un seul tenant (`assets/ui/onglets.png`) :
  * les cinq dalles, leur icône et leur libellé sont dans l'image, dans l'ordre
  * du ruban. L'écran ne pose que cinq zones cliquables et la LUEUR de l'onglet
  * actif — d'où la disparition du médaillon « Jouer » : le dessin traite les
@@ -109,15 +109,10 @@ const FRAME = {
 } as const;
 
 /**
- * La barre d'onglets dessinée (`ART.onglets`, 1080 × 378) : sa hauteur en
+ * La barre d'onglets dessinée (`ART.onglets`, 1556 × 306) : sa hauteur en
  * largeurs d'écran, mesurée sur le dessin.
- *
- * ⚠️ Le fichier source portait une bande transparente sous le dessin
- * (jusqu'à 500 de haut) : elle a été rognée avant l'import, sinon elle se
- * serait vue comme un vide entre la frise et le bord de l'écran, sous
- * `resizeMode="stretch"`.
  */
-const TAB_BAR_HEIGHT = 378 / 1080;
+const TAB_BAR_HEIGHT = 306 / 1556;
 
 /**
  * L'ordre à l'écran, de gauche à droite. « Jouer » au milieu, encadré par
@@ -353,11 +348,6 @@ function TabBar({
   // fond nue ne reste visible sous la barre. Le haut ne bouge pas — c'est son
   // bas qui s'allonge.
   const height = barHeight + insets.bottom;
-  // Le dessin est poussé vers le bas d'une fraction de sa hauteur : sur les
-  // téléphones sans encoche du bas, ça colle mieux la frise au bord de
-  // l'écran que de l'étirer. `tabBar` coupe (`overflow: 'hidden'`) ce qui en
-  // dépasse en bas — un filet de dalles, pas les icônes ni les libellés.
-  const nudgeDown = barHeight * 0.06;
   const cell = pageWidth / TABS.length;
   const last = TABS.length - 1;
 
@@ -371,7 +361,7 @@ function TabBar({
         resizeMode="stretch"
         accessible={false}
         importantForAccessibility="no"
-        style={{ position: 'absolute', left: 0, top: nudgeDown, width: pageWidth, height }}
+        style={{ position: 'absolute', left: 0, top: 0, width: pageWidth, height }}
       />
 
       <Animated.View
@@ -385,9 +375,8 @@ function TabBar({
             // la dalle, là où se trouve l'icône du dessin. Elle se règle sur
             // `barHeight`, pas sur la boîte allongée par l'inset : sinon la
             // lueur descendrait dans la zone de sécurité, où il n'y a plus
-            // d'icône à éclairer. `nudgeDown` la suit : l'icône a bougé
-            // avec le dessin, la lueur doit rester sur elle.
-            top: barHeight * 0.05 + nudgeDown,
+            // d'icône à éclairer.
+            top: barHeight * 0.05,
             borderRadius: cell / 2,
             transform: [
               {
