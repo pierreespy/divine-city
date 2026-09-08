@@ -62,15 +62,14 @@ export const ART = {
   maquette: require('../../../assets/ui/maquette.png') as ImageSourcePropType,
   /**
    * La barre d'onglets, VIDE : les cinq dalles de pierre, sans icône ni
-   * libellé. L'écran pose par-dessus les symboles (`ongletsSymboles`) et
-   * les intitulés (voir `TabBar`) — ce sont eux qui savent lesquels des
-   * cinq onglets existent, dans quel ordre, et sous quel nom.
+   * libellé. `TabBar` pose `ongletsSymboles` par-dessus, dans la même boîte.
    */
   ongletsVides: require('../../../assets/ui/onglets_vides.png') as ImageSourcePropType,
   /**
-   * Les cinq symboles de la barre d'onglets, à plat sur fond transparent,
-   * dans l'ordre du ruban (quêtes, olympe, épées, casque ailé, amphore).
-   * Posés par `TabBar` sur `ongletsVides`, au-dessus des libellés.
+   * Les cinq symboles de la barre d'onglets ET leurs intitulés, sur fond
+   * transparent, dans l'ordre du ruban (quêtes, olympe, épées, casque ailé,
+   * amphore). Le texte est dans les pixels — `TabBar` ne fait que poser ce
+   * dessin sur `ongletsVides`, dans la même boîte.
    */
   ongletsSymboles: require('../../../assets/ui/onglets_symboles.png') as ImageSourcePropType,
   /** Les dunes et leur chimère, sur la carte de la course. */

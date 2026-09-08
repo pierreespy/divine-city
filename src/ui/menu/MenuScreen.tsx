@@ -15,14 +15,14 @@
  * au démarrage, et deux dalles le bordent de chaque côté : aucun onglet n'est
  * à plus de deux glissements de pouce, et la barre est symétrique.
  *
- * ⚠️ La barre d'onglets est COMPOSÉE, pas dessinée d'un seul tenant : les
- * cinq dalles de pierre viennent de `onglets_vides.png`, les cinq symboles
- * de `onglets_symboles.png` (posés par-dessus, dans l'ordre du ruban), et
- * l'intitulé de chaque onglet est un `Text` de l'écran, sous son symbole.
- * L'écran pose en plus les cinq zones cliquables et la LUEUR de l'onglet
- * actif — d'où la disparition du médaillon « Jouer » : les cinq dalles sont
- * traitées à égalité, et un médaillon en relief par-dessus en recouvrirait
- * une.
+ * ⚠️ La barre d'onglets est COMPOSÉE de DEUX images superposées : les cinq
+ * dalles de pierre (`onglets_vides.png`) et, par-dessus, les cinq symboles
+ * et leurs intitulés, dans l'ordre du ruban (`onglets_symboles.png` —
+ * texte compris, dans les pixels). L'écran ne pose que les cinq zones
+ * cliquables et la LUEUR de l'onglet actif, glissée ENTRE les deux images
+ * pour éclairer la pierre sans passer sur le dessin — d'où la disparition
+ * du médaillon « Jouer » : les cinq dalles sont traitées à égalité, et un
+ * médaillon en relief par-dessus en recouvrirait une.
  *
  * ⚠️ Les onglets ne sont pas cinq écrans qui se remplacent : ils sont
  * COUSUS côte à côte dans un même ruban horizontal que le doigt fait
@@ -44,7 +44,6 @@ import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
 import {
   Animated,
   Image,
-  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -119,20 +118,13 @@ const FRAME = {
 const TAB_BAR_HEIGHT = 200 / 1024;
 
 /**
- * Où poser les symboles (`ART.ongletsSymboles`) DANS une dalle, en fractions
- * de la hauteur de la barre : ils occupent le haut, et laissent le bas au
- * libellé posé par `TabBar`.
- */
-const TAB_SYMBOLS = { top: 0.08, height: 0.54 } as const;
-
-/**
  * L'ordre à l'écran, de gauche à droite. « Jouer » au milieu, encadré par
  * deux dalles de chaque côté.
  *
- * ⚠️ Le symbole de chaque dalle vient de `ART.ongletsSymboles`, dans ce
- * même ordre — mais le libellé, lui, est posé par `TabBar` : c'est ce
- * qu'une image seule ne sait pas faire, avec le nom lu à voix haute et
- * l'onglet vers lequel on saute.
+ * ⚠️ Le symbole ET son libellé viennent tous deux de `ART.ongletsSymboles`,
+ * dans ce même ordre — le texte est dans les pixels, comme pour les dalles.
+ * Ce qui reste à poser ici est ce qu'une image ne sait pas faire : le nom lu
+ * à voix haute, et l'onglet vers lequel on saute.
  */
 const TABS: { id: MenuTab; label: string }[] = [
   { id: 'quetes', label: 'Quêtes' },
@@ -381,22 +373,9 @@ function TabBar({
         style={{ position: 'absolute', left: 0, top: 0, width: pageWidth, height }}
       />
 
-      <Image
-        source={ART.ongletsSymboles}
-        // Même largeur que les dalles, mais cantonné à leur haut : le bas
-        // reste pour le libellé, posé juste en dessous (`styles.tabLabels`).
-        resizeMode="stretch"
-        accessible={false}
-        importantForAccessibility="no"
-        style={{
-          position: 'absolute',
-          left: 0,
-          top: height * TAB_SYMBOLS.top,
-          width: pageWidth,
-          height: height * TAB_SYMBOLS.height,
-        }}
-      />
-
+      {/* La lueur de l'onglet actif : ENTRE les dalles et les symboles,
+          donc sous eux — elle éclaire la pierre, pas le dessin posé
+          par-dessus. */}
       <Animated.View
         pointerEvents="none"
         style={[
@@ -427,22 +406,15 @@ function TabBar({
         />
       </Animated.View>
 
-      {/* Les libellés, sous les symboles : le seul texte que le dessin des
-          dalles ne porte pas. `pointerEvents="none"` — le clic reste au
-          `Pressable` du dessous, sur toute la dalle. */}
-      <View
-        pointerEvents="none"
-        style={[
-          styles.tabLabels,
-          { top: height * (TAB_SYMBOLS.top + TAB_SYMBOLS.height), bottom: 0 },
-        ]}
-      >
-        {TABS.map((tab) => (
-          <Text key={tab.id} style={styles.tabLabel} numberOfLines={2} minimumFontScale={0.8} adjustsFontSizeToFit>
-            {tab.label}
-          </Text>
-        ))}
-      </View>
+      <Image
+        source={ART.ongletsSymboles}
+        // Même boîte que les dalles : symbole ET libellé sont dans ce
+        // dessin, d'un bord à l'autre de la barre.
+        resizeMode="stretch"
+        accessible={false}
+        importantForAccessibility="no"
+        style={{ position: 'absolute', left: 0, top: 0, width: pageWidth, height }}
+      />
 
       <View style={styles.tabRow}>
         {TABS.map((tab, i) => (
@@ -669,31 +641,6 @@ const styles = StyleSheet.create({
   // elle passerait sur le décor au-dessus de la barre.
   tabBar: { overflow: 'hidden' },
   glow: { position: 'absolute', left: 0, overflow: 'hidden' },
-  // Le rang des libellés, sous les symboles : cinq cases, une par dalle,
-  // alignées sur les mêmes colonnes que `tabRow`.
-  tabLabels: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-  },
-  // ⚠️ Police et couleur demandées telles quelles, pas les deux polices du
-  // menu (voir `theme.ts`) : c'est un texte SERIF gras et italique, sur les
-  // dalles de pierre, pas une capitale gravée. `fontWeight`/`fontStyle`
-  // jouent normalement ici — la famille est une police SYSTÈME (générique
-  // « serif »), pas l'une des graisses chargées à la main par `App.tsx`.
-  tabLabel: {
-    flex: 1,
-    textAlign: 'center',
-    paddingHorizontal: 4,
-    fontFamily: Platform.select({ ios: 'Georgia', default: 'serif' }),
-    fontWeight: 'bold',
-    fontStyle: 'italic',
-    fontSize: 13,
-    lineHeight: 15,
-    color: '#e8c4ac',
-  },
   tabRow: { flexDirection: 'row', height: '100%' },
   // Une zone cliquable, et rien d'autre : l'icône et l'intitulé sont dans le
   // dessin. Elle ne peint qu'au toucher, pour dire que l'appui a été pris.
