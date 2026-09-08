@@ -308,11 +308,10 @@ export function MenuScreen({
             style={[styles.edgeFade, { bottom: 0, height: insets.bottom }]}
           />
 
-          {/* L'ombre de la lueur : elle prolonge, juste un peu, la lueur de
-              l'onglet actif dans cette marge — comme si sa chaleur débordait
-              sous la barre avant de se perdre dans le noir. Suit le doigt
-              exactement comme la lueur elle-même (même largeur de dalle,
-              même interpolation de `scrollX`). */}
+          {/* L'ombre de la lueur : un ovale à part entière, posé dans cette
+              marge — pas un prolongement du rectangle du dessus. Suit le
+              doigt exactement comme la lueur elle-même (même largeur de
+              dalle, même interpolation de `scrollX`), centré dedans. */}
           <Animated.View
             pointerEvents="none"
             style={[
@@ -333,12 +332,7 @@ export function MenuScreen({
               },
             ]}
           >
-            <LinearGradient
-              colors={['rgba(255, 225, 150, 0.35)', 'rgba(255, 225, 150, 0)']}
-              start={{ x: 0.5, y: 0 }}
-              end={{ x: 0.5, y: 1 }}
-              style={StyleSheet.absoluteFill}
-            />
+            <GlowOval boxWidth={pageWidth / TABS.length} boxHeight={insets.bottom} />
           </Animated.View>
         </>
       )}
@@ -396,6 +390,50 @@ function GlowGradient() {
       end={{ x: 0.5, y: 1 }}
       style={StyleSheet.absoluteFill}
     />
+  );
+}
+
+/**
+ * Les trois couches de l'ovale de `GlowOval`, de la plus grande (la plus
+ * pâle) à la plus petite (la plus vive) — chacune une fraction de la boîte
+ * qui les porte (`boxWidth` × `boxHeight`).
+ */
+const GLOW_OVAL_LAYERS = [
+  { widthFrac: 0.92, heightFrac: 1, opacity: 0.12 },
+  { widthFrac: 0.62, heightFrac: 0.72, opacity: 0.24 },
+  { widthFrac: 0.32, heightFrac: 0.48, opacity: 0.42 },
+] as const;
+
+/**
+ * L'ombre de la lueur, dans la marge sous la barre : un OVALE, pas un
+ * dégradé rectangulaire — trois pilules concentriques (`borderRadius` égal
+ * à leur demi-hauteur, donc parfaitement arrondies aux deux bouts), plus
+ * pâles et plus larges à mesure qu'on s'éloigne du centre. `boxWidth` et
+ * `boxHeight` sont ceux de la boîte qui la porte (une dalle de large, la
+ * marge de sécurité de haut) : chaque couche s'y centre elle-même.
+ */
+function GlowOval({ boxWidth, boxHeight }: { boxWidth: number; boxHeight: number }) {
+  return (
+    <>
+      {GLOW_OVAL_LAYERS.map((layer) => {
+        const width = boxWidth * layer.widthFrac;
+        const height = boxHeight * layer.heightFrac;
+        return (
+          <View
+            key={layer.widthFrac}
+            style={{
+              position: 'absolute',
+              left: (boxWidth - width) / 2,
+              top: (boxHeight - height) / 2,
+              width,
+              height,
+              borderRadius: height / 2,
+              backgroundColor: `rgba(255, 225, 150, ${layer.opacity})`,
+            }}
+          />
+        );
+      })}
+    </>
   );
 }
 
