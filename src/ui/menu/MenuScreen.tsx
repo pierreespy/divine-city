@@ -409,8 +409,8 @@ function GlowGradient() {
  * là où un rayon de coin ne le peut pas.
  */
 function GlowOval({ boxWidth, boxHeight }: { boxWidth: number; boxHeight: number }) {
-  const width = boxWidth * 0.82;
-  const height = boxHeight * 0.42;
+  const width = boxWidth * 0.5;
+  const height = boxHeight * 0.32;
   return (
     <View
       style={{
