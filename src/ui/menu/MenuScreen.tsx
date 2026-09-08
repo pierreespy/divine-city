@@ -344,7 +344,56 @@ export function MenuScreen({
  * effacerait le dessin qu'elle recouvre, là qu'une lueur le laisse lire.
  * Elle reste doublée par l'état d'accessibilité (`selected`), qui, lui, ne
  * dépend d'aucune couleur.
+ *
+ * ⚠️ Le dégradé est CIRCULAIRE, pas un balayage gauche-droite : `expo-
+ * linear-gradient` ne sait tracer qu'une ligne droite, donc le rond se
+ * simule en empilant des disques concentriques (`GLOW_RINGS`), de plus en
+ * plus petits et de plus en plus opaques vers le centre — un dégradé
+ * radial fait main. La BOÎTE qui les porte reste rectangulaire (voir
+ * `styles.glow`) : ce sont les disques qui sont ronds, pas leur cadre, donc
+ * les coins de la dalle restent sombres et seul son cœur s'éclaire.
  */
+
+/**
+ * Les disques de la lueur, du plus grand (le plus pâle) au plus petit (le
+ * plus vif) — la même teinte chaude que l'ancien dégradé linéaire, dosée
+ * pour retomber à peu près sur le même pic au centre (0,55 d'opacité).
+ */
+const GLOW_RINGS = [
+  { size: '100%', color: 'rgba(255, 215, 130, 0.08)' },
+  { size: '78%', color: 'rgba(255, 220, 140, 0.16)' },
+  { size: '56%', color: 'rgba(255, 224, 148, 0.28)' },
+  { size: '36%', color: 'rgba(255, 228, 155, 0.42)' },
+  { size: '18%', color: 'rgba(255, 232, 162, 0.55)' },
+] as const;
+
+/** Un disque centré, de la taille donnée — un anneau du dégradé radial. */
+function GlowRing({ size, color }: { size: string; color: string }) {
+  return (
+    <View
+      style={{
+        position: 'absolute',
+        top: `${(100 - parseFloat(size)) / 2}%`,
+        left: `${(100 - parseFloat(size)) / 2}%`,
+        width: size,
+        height: size,
+        borderRadius: 9999,
+        backgroundColor: color,
+      }}
+    />
+  );
+}
+
+function RadialGlow() {
+  return (
+    <View style={StyleSheet.absoluteFill}>
+      {GLOW_RINGS.map((ring) => (
+        <GlowRing key={ring.size} {...ring} />
+      ))}
+    </View>
+  );
+}
+
 function TabBar({
   index,
   pageWidth,
@@ -398,12 +447,7 @@ function TabBar({
           },
         ]}
       >
-        <LinearGradient
-          colors={['rgba(255, 215, 130, 0)', 'rgba(255, 225, 150, 0.55)', 'rgba(255, 215, 130, 0)']}
-          start={{ x: 0, y: 0.5 }}
-          end={{ x: 1, y: 0.5 }}
-          style={StyleSheet.absoluteFill}
-        />
+        <RadialGlow />
       </Animated.View>
 
       <Image
