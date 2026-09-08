@@ -345,35 +345,22 @@ export function MenuScreen({
  * Elle reste doublée par l'état d'accessibilité (`selected`), qui, lui, ne
  * dépend d'aucune couleur.
  *
- * ⚠️ Le fondu se fait dans LES DEUX SENS, pas juste gauche-droite :
- * `expo-linear-gradient` ne trace qu'une ligne droite, donc l'effet rond
- * s'approche en EMPILANT deux dégradés (voir `GlowGradient`) — un
- * horizontal, un vertical, tous deux transparents à leurs bords et pleins
- * en leur centre. Superposés, ils s'additionnent : le cœur du rectangle
- * (où les deux sont pleins) est le plus lumineux, ses quatre bords
- * s'éteignent, et ses coins — où aucun des deux n'est plein — restent les
- * plus sombres. Le CADRE, lui, reste le même rectangle qu'avant.
+ * ⚠️ Le fondu est VERTICAL, du haut vers le bas — pas une croix : plein en
+ * haut de la dalle, là où vit l'icône du dessin, il s'éteint en descendant
+ * vers le libellé. Un seul dégradé (voir `GlowGradient`), pas deux
+ * empilés : le haut de la dalle est le plus lumineux, et rien ne
+ * s'allume plus bas que ce que le fondu laisse passer. Le CADRE, lui,
+ * reste le même rectangle qu'avant.
  */
-
-/** La teinte de la lueur, pleine au centre d'un dégradé, éteinte à ses bords. */
-const GLOW_COLORS = ['rgba(255, 225, 150, 0)', 'rgba(255, 225, 150, 0.55)', 'rgba(255, 225, 150, 0)'] as const;
 
 function GlowGradient() {
   return (
-    <>
-      <LinearGradient
-        colors={GLOW_COLORS}
-        start={{ x: 0, y: 0.5 }}
-        end={{ x: 1, y: 0.5 }}
-        style={StyleSheet.absoluteFill}
-      />
-      <LinearGradient
-        colors={GLOW_COLORS}
-        start={{ x: 0.5, y: 0 }}
-        end={{ x: 0.5, y: 1 }}
-        style={StyleSheet.absoluteFill}
-      />
-    </>
+    <LinearGradient
+      colors={['rgba(255, 225, 150, 0.65)', 'rgba(255, 225, 150, 0)']}
+      start={{ x: 0.5, y: 0 }}
+      end={{ x: 0.5, y: 1 }}
+      style={StyleSheet.absoluteFill}
+    />
   );
 }
 
