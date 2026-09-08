@@ -16,17 +16,16 @@
  * décidée maintenant, et le bouton dit franchement qu'il ne marche pas
  * encore plutôt que de rester muet au premier appui.
  *
- * ⚠️ Les parures ont deux paliers, payés dans deux monnaies différentes :
- * une **commune** (couleur différente) coûte de l'or, une **légendaire**
- * (tenue/modèle 3D différent) coûte des lauriers. Le prix affiché porte
- * donc toujours l'icône de SA monnaie — jamais un nombre nu, qui laisserait
- * deviner laquelle des deux bourses va se vider.
+ * ⚠️ Les parures ont quatre raretés (mortel, héros, titan, olympien), mais
+ * une seule monnaie : le laurier. Seule la parure d'origine (mortelle) est
+ * gratuite. L'or, lui, n'achète plus que les divinités — le prix d'une
+ * parure porte donc toujours l'icône du laurier, jamais celle de l'or.
  */
 
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { GOD_ORDER, godById, type GodId } from '../../entities/gods/roster';
 import { godPrice, ownsGod, ownsSkin, type Progression } from '../../meta/progression';
-import { GOLD_PACKS, LAUREL_PACKS, purchasableSkins } from '../../meta/store';
+import { GOLD_PACKS, LAUREL_PACKS, purchasableSkins, RARITY_COLOR } from '../../meta/store';
 import { Button, Card, Coin, GodBadge, Laurel, SectionTitle } from './parts';
 import { COLORS, RADIUS, SPACE, TYPE, hex } from './theme';
 
@@ -114,20 +113,21 @@ export function ShopTab({ state, onBuyGod, onBuySkin }: Props) {
           <SectionTitle>Parures</SectionTitle>
           <View style={styles.skinRow}>
             {skins.map((skin) => {
-              const legendary = skin.tier === 'legendaire';
+              const isModel = skin.rarity === 'olympien';
               const godAppearance = godById(skin.godId).appearance;
-              // Une commune se reconnaît d'un coup d'œil à sa couleur ; une
-              // légendaire est un modèle 3D à part, pas encore prévisualisable
-              // ici — le cadre doré + le laurier en prix suffisent à la
-              // distinguer tant qu'il n'y a pas d'aperçu du modèle.
+              // Une recolorée (mortel/héros/titan) se reconnaît d'un coup
+              // d'œil à sa couleur ; une olympienne est un modèle 3D à part,
+              // pas encore prévisualisable ici — le cadre à la teinte de sa
+              // rareté suffit à la distinguer tant qu'il n'y a pas d'aperçu
+              // du modèle.
               return (
-                <Card key={skin.id} style={[styles.skin, legendary && styles.skinLegendary]}>
+                <Card key={skin.id} style={[styles.skin, isModel && styles.skinLegendary]}>
                   <View
                     style={[
                       styles.skinDot,
                       {
-                        backgroundColor: hex(legendary ? godAppearance.color : skin.color),
-                        borderColor: legendary ? COLORS.gold : hex(skin.accent),
+                        backgroundColor: hex(isModel ? godAppearance.color : skin.color),
+                        borderColor: hex(RARITY_COLOR[skin.rarity]),
                       },
                     ]}
                   />
@@ -141,10 +141,10 @@ export function ShopTab({ state, onBuyGod, onBuySkin }: Props) {
                     testID={`buy-${skin.id}`}
                     label="Acheter"
                     variant="primary"
-                    disabled={legendary ? state.laurels < skin.price : state.gold < skin.price}
+                    disabled={state.laurels < skin.price}
                     price={
                       <>
-                        {legendary ? <Laurel size={14} /> : <Coin size={14} />}
+                        <Laurel size={14} />
                         <Text style={styles.skinPrice}>{skin.price.toLocaleString('fr-FR')}</Text>
                       </>
                     }

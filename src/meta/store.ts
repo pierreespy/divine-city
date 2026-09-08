@@ -18,21 +18,45 @@
 import { GOD_ORDER, GODS, type GodId } from '../entities/gods/roster';
 
 /**
- * Une parure a désormais deux paliers, pas juste deux niveaux de prix :
+ * Une parure a quatre raretés, décidées le 2026-09-08 (remplace l'ancien
+ * système à deux paliers commune/légendaire, toujours en vigueur pour la
+ * FORME de la parure mais plus pour son prix — voir plus bas) :
  *
- * - **commune** : la même divinité, d'une autre couleur — le petit achat
- *   qu'on refait, payé en or.
- * - **légendaire** : une tenue entièrement différente (un modèle 3D à part,
- *   voir `src/core/AssetLoader.ts`), payée en lauriers.
+ * - **mortel** (gris) — la parure d'origine, fournie avec le dieu.
+ * - **héros** (bleu) — un achat d'impulsion.
+ * - **titan** (bordeaux) — un palier « sérieux ».
+ * - **olympien** (or) — la pièce de prestige : un modèle 3D à part, pas une
+ *   simple recoloration.
  *
- * L'union discriminée par `tier` (plutôt qu'un type unique à champs
- * optionnels) empêche STRUCTURELLEMENT une parure légendaire de porter son
- * propre `accent` : le halo du cortège reste toujours celui du dieu
- * (`GodAppearance.accent`, dans le roster), quelle que soit la tenue portée
- * — ce n'est pas une convention à respecter, le type ne laisse pas le champ
- * exister sur `LegendarySkin`.
+ * Les noms sont volontairement des noms communs invariables (pas des
+ * adjectifs accordés comme « mortelle »/« héroïque ») : ce sont des badges
+ * de rareté, affichés seuls, qui doivent se traduire mot pour mot dans
+ * d'autres langues sans règle d'accord à refaire à chaque fois — cf. l'anglais
+ * Mortal/Hero/Titan/Olympian, l'espagnol Mortal/Héroe/Titán/Olímpico.
+ *
+ * Toutes les parures payantes se paient désormais en lauriers, y compris
+ * celles qui ne sont qu'une recoloration : l'or ne finance plus que les
+ * divinités (voir `GOD_PRICES`), pour que la distinction entre les deux
+ * monnaies reste nette — l'or est ce qu'on gagne en jouant, le laurier ce
+ * qu'on achète ou qu'on mérite.
  */
-export type SkinTier = 'commune' | 'legendaire';
+export type SkinRarity = 'mortel' | 'heros' | 'titan' | 'olympien';
+
+/** Le nom affiché de chaque rareté — un badge, pas une phrase. */
+export const RARITY_LABEL: Readonly<Record<SkinRarity, string>> = {
+  mortel: 'Mortel',
+  heros: 'Héros',
+  titan: 'Titan',
+  olympien: 'Olympien',
+};
+
+/** La teinte de badge de chaque rareté — gris, bleu, bordeaux, or. */
+export const RARITY_COLOR: Readonly<Record<SkinRarity, number>> = {
+  mortel: 0x8b8378,
+  heros: 0x2c5fa8,
+  titan: 0x7a1f3d,
+  olympien: 0xeec24a,
+};
 
 interface SkinBase {
   readonly id: string;
@@ -41,20 +65,24 @@ interface SkinBase {
   readonly label: string;
 }
 
-/** Le corps recoloré du dieu — le halo du cortège reste celui du roster. */
-export interface CommonSkin extends SkinBase {
-  readonly tier: 'commune';
+/**
+ * Le corps recoloré du dieu — le halo du cortège reste celui du roster.
+ * Couvre les raretés mortel, héros et titan : seule la rareté olympienne
+ * change de modèle plutôt que de couleur.
+ */
+export interface RecoloredSkin extends SkinBase {
+  readonly rarity: 'mortel' | 'heros' | 'titan';
   /** Le corps du dieu. */
   readonly color: number;
   /** Le halo et la teinte du cortège. */
   readonly accent: number;
-  /** En or. 0 = fournie avec le dieu. */
+  /** En lauriers. 0 = fournie avec le dieu (toujours la rareté mortelle). */
   readonly price: number;
 }
 
 /** Une tenue entièrement différente — un modèle 3D à part, pas une teinte. */
 export interface LegendarySkin extends SkinBase {
-  readonly tier: 'legendaire';
+  readonly rarity: 'olympien';
   /**
    * Clé résolue par la table `require()` statique d'`AssetLoader.ts` — un
    * chemin construit dynamiquement ne serait pas vu par Metro au bundling.
@@ -64,7 +92,7 @@ export interface LegendarySkin extends SkinBase {
   readonly price: number;
 }
 
-export type Skin = CommonSkin | LegendarySkin;
+export type Skin = RecoloredSkin | LegendarySkin;
 
 /**
  * L'identifiant de la parure d'origine d'un dieu.
@@ -77,13 +105,13 @@ export function defaultSkinId(godId: GodId): string {
   return `${godId}-origine`;
 }
 
-/** La parure d'origine, fabriquée à partir de la ligne du dieu. Toujours commune. */
-function originSkin(godId: GodId): CommonSkin {
+/** La parure d'origine, fabriquée à partir de la ligne du dieu. Toujours mortelle. */
+function originSkin(godId: GodId): RecoloredSkin {
   const god = GODS[godId];
   return {
     id: defaultSkinId(godId),
     godId,
-    tier: 'commune',
+    rarity: 'mortel',
     label: 'Origine',
     color: god.appearance.color,
     accent: god.appearance.accent,
@@ -92,27 +120,29 @@ function originSkin(godId: GodId): CommonSkin {
 }
 
 /**
- * Les parures communes achetables.
+ * Les parures achetables.
  *
  * ⚠️ Les couleurs suivent la règle posée en M11 et rappelée par le roster :
  * la caméra plonge sur un sol clair (marbre, terre battue), donc une parure
  * pâle rendrait le dieu invisible dans sa propre cité. Toutes sont saturées
  * et plus sombres que la dalle la plus claire ; c'est l'accent, plus clair,
  * qui porte la couleur du cortège.
+ *
+ * Toutes celles ci-dessous sont de rareté héros (500 lauriers) : le premier
+ * palier payant, celui qu'on achète sur un coup de tête. Les parures titan
+ * et olympiennes viennent plus tard — titan dès qu'un deuxième jeu de
+ * teintes par dieu a du sens, olympien dès qu'un premier modèle 3D de tenue
+ * existe (voir assets/models/README.md).
  */
 const PURCHASABLE: readonly Skin[] = [
-  { id: 'hermes-nuit', godId: 'hermes', tier: 'commune', label: 'Nuit', color: 0x1e3a8a, accent: 0x93c5fd, price: 120 },
-  { id: 'hermes-olive', godId: 'hermes', tier: 'commune', label: 'Olivier', color: 0x3f6212, accent: 0xbef264, price: 120 },
-  { id: 'zeus-orage', godId: 'zeus', tier: 'commune', label: 'Orage', color: 0x3f3f46, accent: 0xfef08a, price: 150 },
-  { id: 'aphrodite-aurore', godId: 'aphrodite', tier: 'commune', label: 'Aurore', color: 0x9d174d, accent: 0xfecdd3, price: 150 },
-  { id: 'poseidon-abysse', godId: 'poseidon', tier: 'commune', label: 'Abysse', color: 0x134e4a, accent: 0x5eead4, price: 150 },
-  { id: 'athena-bronze', godId: 'athena', tier: 'commune', label: 'Bronze', color: 0x78350f, accent: 0xfcd34d, price: 150 },
-  { id: 'hades-braise', godId: 'hades', tier: 'commune', label: 'Braise', color: 0x431407, accent: 0xfb923c, price: 150 },
-  { id: 'ares-fer', godId: 'ares', tier: 'commune', label: 'Fer', color: 0x44403c, accent: 0xe7e5e4, price: 150 },
-  // Les parures légendaires viennent ici, une fois qu'un premier modèle 3D
-  // de tenue existe (voir assets/models/README.md) — aucune tant qu'aucun
-  // .glb n'est déposé, pour ne pas référencer un modelRef qui pointe vers
-  // rien.
+  { id: 'hermes-nuit', godId: 'hermes', rarity: 'heros', label: 'Nuit', color: 0x1e3a8a, accent: 0x93c5fd, price: 500 },
+  { id: 'hermes-olive', godId: 'hermes', rarity: 'heros', label: 'Olivier', color: 0x3f6212, accent: 0xbef264, price: 500 },
+  { id: 'zeus-orage', godId: 'zeus', rarity: 'heros', label: 'Orage', color: 0x3f3f46, accent: 0xfef08a, price: 500 },
+  { id: 'aphrodite-aurore', godId: 'aphrodite', rarity: 'heros', label: 'Aurore', color: 0x9d174d, accent: 0xfecdd3, price: 500 },
+  { id: 'poseidon-abysse', godId: 'poseidon', rarity: 'heros', label: 'Abysse', color: 0x134e4a, accent: 0x5eead4, price: 500 },
+  { id: 'athena-bronze', godId: 'athena', rarity: 'heros', label: 'Bronze', color: 0x78350f, accent: 0xfcd34d, price: 500 },
+  { id: 'hades-braise', godId: 'hades', rarity: 'heros', label: 'Braise', color: 0x431407, accent: 0xfb923c, price: 500 },
+  { id: 'ares-fer', godId: 'ares', rarity: 'heros', label: 'Fer', color: 0x44403c, accent: 0xe7e5e4, price: 500 },
 ];
 
 /** Toutes les parures d'un dieu, l'origine en tête. */
@@ -177,6 +207,15 @@ export const GOLD_PACKS: readonly GoldPack[] = [
 /**
  * Les paquets de lauriers contre argent réel.
  *
+ * **État : tarifé le 2026-09-08**, calé sur les paliers de rareté des
+ * parures ci-dessus : chaque montant couvre pile une rareté (héros à 500,
+ * titan à 800, olympien à 1 200), pour qu'un joueur qui vise une parure
+ * précise achète le pack qui la couvre sans reliquat gênant. Comparatif
+ * retenu : l'échelle de prix des skins Fortnite (Rare/Epic/Legendary,
+ * ~9,50-16 €), réduite d'environ un tiers — Divine City n'a pas la base de
+ * joueurs ni le statut social d'un battle royale, ses parures doivent rester
+ * accessibles à un public plus casual.
+ *
  * Même principe que `GoldPack`, gardé comme un type à part plutôt que
  * généralisé : le laurier est une monnaie plus rare que l'or (moins
  * d'unités, prix plus élevé), pas la même chose sous un autre nom — un
@@ -192,7 +231,9 @@ export interface LaurelPack {
 }
 
 export const LAUREL_PACKS: readonly LaurelPack[] = [
-  { id: 'larme', laurels: 50, price: '2,99 €', featured: false },
-  { id: 'coupe', laurels: 180, price: '7,99 €', featured: true },
-  { id: 'amphore', laurels: 500, price: '17,99 €', featured: false },
+  { id: 'petit', laurels: 100, price: '0,99 €', featured: false },
+  { id: 'moyen', laurels: 550, price: '4,99 €', featured: false },
+  { id: 'grand', laurels: 850, price: '7,99 €', featured: false },
+  { id: 'genereux', laurels: 1250, price: '11,99 €', featured: true },
+  { id: 'ultime', laurels: 3000, price: '24,99 €', featured: false },
 ];

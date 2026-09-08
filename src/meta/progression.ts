@@ -118,33 +118,23 @@ export function buyGod(state: Progression, godId: GodId): Progression {
 /**
  * Achète une parure. Le dieu correspondant doit être possédé.
  *
- * La monnaie débitée dépend du palier : l'or pour une parure commune, les
- * lauriers pour une légendaire — jamais l'inverse, c'est tout le sens de la
- * distinction des deux paliers.
+ * Toute parure payante se paie en lauriers, quelle que soit sa rareté — seule
+ * la parure d'origine (mortelle) est gratuite, fournie avec le dieu. L'or ne
+ * finance plus que les divinités (`buyGod`), pas les parures.
  */
 export function buySkin(state: Progression, skinId: string): Progression {
   const skin = skinById(skinId);
   if (skin === null) return state;
   if (ownsSkin(state, skinId)) return state;
   if (!ownsGod(state, skin.godId)) return state;
-
-  if (skin.tier === 'commune') {
-    if (state.gold < skin.price) return state;
-    return {
-      ...state,
-      gold: state.gold - skin.price,
-      ownedSkins: [...state.ownedSkins, skinId],
-      // Une parure qu'on vient de payer se porte tout de suite : sans cela,
-      // le joueur paie et il ne se passe rien à l'écran.
-      equippedSkins: { ...state.equippedSkins, [skin.godId]: skinId },
-    };
-  }
-
   if (state.laurels < skin.price) return state;
+
   return {
     ...state,
     laurels: state.laurels - skin.price,
     ownedSkins: [...state.ownedSkins, skinId],
+    // Une parure qu'on vient de payer se porte tout de suite : sans cela,
+    // le joueur paie et il ne se passe rien à l'écran.
     equippedSkins: { ...state.equippedSkins, [skin.godId]: skinId },
   };
 }
@@ -168,7 +158,7 @@ export function equipSkin(state: Progression, skinId: string): Progression {
  * charger en entier (parure légendaire, tenue différente).
  *
  * ⚠️ L'accent (halo, traînée du cortège) vient TOUJOURS du roster
- * (`GodAppearance.accent`), jamais de la parure — même une légendaire ne le
+ * (`GodAppearance.accent`), jamais de la parure — même une olympienne ne le
  * redéfinit pas, c'est une règle de conception, pas un oubli : le type
  * `LegendarySkin` ne porte structurellement pas de champ `accent`.
  */
@@ -188,10 +178,10 @@ export function appearanceOf(state: Progression): PlayerAppearance {
   const equipped = state.equippedSkins[godId];
   const skin = (equipped !== undefined ? skinById(equipped) : null) ?? skinsOf(godId)[0];
 
-  if (skin.tier === 'commune') {
-    return { kind: 'flat', color: skin.color, accent };
+  if (skin.rarity === 'olympien') {
+    return { kind: 'model', modelRef: skin.modelRef, accent };
   }
-  return { kind: 'model', modelRef: skin.modelRef, accent };
+  return { kind: 'flat', color: skin.color, accent };
 }
 
 /**

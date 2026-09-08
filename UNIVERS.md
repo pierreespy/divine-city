@@ -193,12 +193,10 @@ l'Acropole — le métal du trésor profane, celui qu'on amasse en vivant dans
 la cité, par opposition à ce qui vient de l'Olympe (voir le laurier,
 ci-dessous). Un joueur qui voit « 340 or » sait encore où il est.
 
-**Ce qu'il achète**, et dans cet ordre d'importance :
-
-1. **Les divinités** — le gros achat, celui qui change la façon de jouer
-   quand les capacités existeront (M19-M27) ;
-2. **Les parures communes** — la même divinité, d'une autre couleur. Le
-   petit achat qu'on refait.
+**Ce qu'il achète** : **les divinités** — le gros achat, celui qui change la
+façon de jouer quand les capacités existeront (M19-M27). Depuis le
+2026-09-08, l'or n'achète plus de parure : toutes les parures se paient en
+lauriers (voir « Les parures : quatre raretés » ci-dessous).
 
 **Ce qu'il ne doit pas devenir** : un raccourci vers la fin du jeu. Une
 partie rapporte le tiers de son cortège. À un rythme d'une conversion par
@@ -223,36 +221,63 @@ mais ce qui se **mérite**. Le joueur qui voit « 40 lauriers » à côté de
 « 340 or » comprend sans légende laquelle des deux est la précieuse : les
 mortels comptent en or, les dieux en lauriers.
 
-**Ce qu'il achète** : les **parures légendaires** — une tenue entièrement
-différente pour un dieu, pas une simple recoloration (voir « Les parures »
-ci-dessous). C'était la question laissée ouverte à l'ajout de cette monnaie ;
-elle est tranchée depuis le 2026-09-04. Les paquets de lauriers du magasin
-restent, eux, affichés mais **inertes** (voir plus bas) — la monétisation
-reste une décision de la M46, indépendante de ce que la monnaie achète en
-jeu.
+**Ce qu'il achète** : **toutes les parures** — depuis le 2026-09-08, plus
+seulement les légendaires (voir « Les parures : quatre raretés »
+ci-dessous). Les paquets de lauriers du magasin restent, eux, affichés mais
+**inertes** côté paiement réel (voir plus bas) — l'activation de l'achat
+intégré reste une décision de la M46 ; leurs montants et leurs prix, en
+revanche, sont désormais tranchés.
 
 ---
 
-## Les parures : deux paliers
+## Les parures : quatre raretés
 
-**État : ajoutée le 2026-09-04.** Une parure n'est plus un concept unique —
-elle a deux paliers, payés dans deux monnaies différentes :
+**État : décidé le 2026-09-08, remplace le système à deux paliers
+(commune/légendaire) du 2026-09-04.**
 
-- **Commune** — la même divinité, d'une autre couleur. Payée en or, comme
-  aujourd'hui.
-- **Légendaire** — une tenue, un modèle 3D **entièrement différent** (pas une
-  recoloration). Payée en lauriers. C'est le premier achat sérieux de cette
-  monnaie, et la raison pour laquelle un skin légendaire mérite son prix : on
-  ne change pas la teinte d'un dieu, on change son allure.
+Une parure a quatre raretés, chacune associée à une couleur de badge — le
+même principe de nommage que l'or et le laurier : pas de mot de jeu
+générique (« rare », « épique »), mais le vocabulaire de cet univers-là. Ici,
+la hiérarchie mortel → héros → titan → olympien, déjà présente dans la
+mythologie grecque, sert de règle de lecture : plus une parure est rare,
+plus elle rapproche le dieu de son propre rang.
 
-Une règle tient dans les deux cas : le halo et la traînée du cortège
-(l'accent) restent **toujours** ceux du dieu, quelle que soit la parure
-portée — même une tenue légendaire ne les redéfinit pas. C'est le corps, pas
-le sillage, qui change de parure.
+| Rareté | Couleur | Prix (lauriers) | Ce que c'est |
+|---|---|---|---|
+| **Mortel** | Gris | Gratuit | La parure d'origine, fournie avec le dieu |
+| **Héros** | Bleu | 500 | Une recoloration — le premier achat, sur un coup de tête |
+| **Titan** | Bordeaux | 800 | Une recoloration — le palier « sérieux » |
+| **Olympien** | Or | 1 200 | Un modèle 3D **entièrement différent**, pas une recoloration — la pièce de prestige |
 
-Le pipeline de production des modèles légendaires (génération externe,
-export `.glb`, intégration dans `src/core/AssetLoader.ts`) suit celui déjà
-posé pour l'apparence des dieux — voir la section suivante.
+Les noms sont des noms communs invariables, pas des adjectifs accordés
+(« mortelle », « héroïque ») : un choix délibéré pour qu'ils se traduisent
+mot pour mot dans d'autres langues sans règle d'accord à refaire à chaque
+fois (EN : Mortal/Hero/Titan/Olympian).
+
+Toutes les parures payantes se paient en **lauriers**, y compris les
+recolorations : l'or, qui les finançait jusqu'ici, n'achète plus que les
+divinités (voir « L'or » ci-dessus) — ça clarifie ce que chaque monnaie
+fait, et ça évite qu'une parure d'apparence commune se paie dans une monnaie
+différente d'une parure d'apparence rare.
+
+Les prix des paquets de lauriers (`LAUREL_PACKS` dans `src/meta/store.ts`)
+sont calés dessus : chaque montant couvre pile une rareté, sans reliquat.
+Comparatif retenu : l'échelle de prix des skins Fortnite (Rare/Epic/Legendary,
+~9,50-16 €), réduite d'environ un tiers — Divine City n'a pas la base de
+joueurs ni le statut social d'un battle royale, ses parures doivent rester
+accessibles à un public plus casual.
+
+Une règle tient à travers les quatre raretés : le halo et la traînée du
+cortège (l'accent) restent **toujours** ceux du dieu, quelle que soit la
+parure portée — même une tenue olympienne ne les redéfinit pas. C'est le
+corps, pas le sillage, qui change de parure.
+
+Le pipeline de production des modèles olympiens (génération externe, export
+`.glb`, intégration dans `src/core/AssetLoader.ts`) suit celui déjà posé pour
+l'apparence des dieux — voir la section suivante. Aucun n'existe encore : la
+rareté olympienne n'a pas de parure en catalogue tant qu'aucun `.glb` n'est
+déposé, pour ne pas référencer un `modelRef` qui pointe vers rien — même
+raison que pour l'ancienne rareté légendaire.
 
 ---
 
@@ -272,7 +297,9 @@ posé pour l'apparence des dieux — voir la section suivante.
   > milliers d'instances à l'écran (mesh bas-poly, texture unique ou couleurs
   > plates). C'est le sujet de la **M40**.
 - **Le mode de jeu** — partie chronométrée, survie, ou objectif de conversion.
-- **La monétisation** — publicité, achat des dieux, ou rien. Le magasin
-  affiche déjà des paquets d'or et de lauriers contre argent réel, mais ils
-  sont **inertes** : la place à l'écran est prise, la décision ne l'est pas
-  (M46).
+- **L'activation des achats réels** — publicité, ou pas. Le magasin affiche
+  déjà des paquets d'or et de lauriers contre argent réel, avec des montants
+  et des prix désormais fixés (2026-09-08, voir « Les parures : quatre
+  raretés »), mais les boutons restent **inertes** : la place à l'écran est
+  prise et le prix est choisi, l'achat intégré (compte marchand, identifiants
+  de produit Apple/Google, vérification côté serveur) ne l'est pas (M46).
