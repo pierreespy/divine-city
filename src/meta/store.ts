@@ -18,6 +18,17 @@
 import { CHARACTER_ORDER, CHARACTERS, type CharacterId } from '../entities/characters/roster';
 
 /**
+ * Les illustrations déposées dans `assets/skins/` (voir son README) — du
+ * concept art, pas encore le modèle 3D joué en jeu. `require()` doit rester
+ * statique ici pour que Metro les bundle.
+ */
+const POSEIDON_ROI_DES_ABYSSES = require('../../assets/skins/titanesque/poseidon_roi_des_abysses.png');
+const ZEUS_FOUDRE_IMPERIALE = require('../../assets/skins/olympienne/zeus_foudre_imperiale.png');
+const ARES_RAGE_DU_LION = require('../../assets/skins/olympienne/ares_rage_du_lion.png');
+const ATHENA_SAGESSE_CELESTE = require('../../assets/skins/olympienne/athena_sagesse_celeste.png');
+const HERMES_MESSAGER_D_OR = require('../../assets/skins/olympienne/hermes_messager_d_or.png');
+
+/**
  * Une parure a quatre raretés, décidées le 2026-09-08 (remplace l'ancien
  * système à deux paliers commune/légendaire) :
  *
@@ -69,6 +80,17 @@ interface SkinBase {
   readonly characterId: CharacterId;
   /** Le nom affiché — court, il tient sur une vignette. */
   readonly label: string;
+  /**
+   * L'illustration de la parure (concept art), résolue par le `require()`
+   * statique de son appelant — Metro doit voir le chemin littéral.
+   *
+   * Optionnel : seules les parures dont l'illustration a été produite en ont
+   * une (voir `assets/skins/README.md`) ; les autres retombent sur le rond
+   * de couleur. Ce n'est PAS le modèle 3D joué en jeu — pour une olympienne,
+   * c'est un aperçu en attendant que `LegendarySkin.modelRef` pointe vers un
+   * vrai `.glb`.
+   */
+  readonly preview?: number;
 }
 
 /**
@@ -90,8 +112,15 @@ export interface RecoloredSkin extends SkinBase {
 export interface LegendarySkin extends SkinBase {
   readonly rarity: 'olympien';
   /**
-   * Clé résolue par la table `require()` statique d'`AssetLoader.ts` — un
-   * chemin construit dynamiquement ne serait pas vu par Metro au bundling.
+   * Clé destinée à une table `require()` statique d'`AssetLoader.ts`, une
+   * fois qu'un `.glb` existe pour cette tenue — un chemin construit
+   * dynamiquement ne serait pas vu par Metro au bundling.
+   *
+   * ⚠️ Aucun `.glb` n'existe encore pour aucune parure olympienne : le jeu
+   * (`Player.ts`) ne sait de toute façon pas encore charger de modèle 3D
+   * (voir `appearanceOf()` dans `progression.ts`). `modelRef` reste donc un
+   * identifiant en attente — c'est `preview` (l'illustration 2D) qui
+   * représente la parure partout où elle est affichée aujourd'hui.
    */
   readonly modelRef: string;
   /** En lauriers. */
@@ -134,12 +163,22 @@ function originSkin(characterId: CharacterId): RecoloredSkin {
  * et plus sombres que la dalle la plus claire ; c'est l'accent, plus clair,
  * qui porte la couleur du cortège.
  *
- * Toutes celles ci-dessous sont de rareté héros (500 lauriers) : le premier
- * palier payant, celui qu'on achète sur un coup de tête. Les parures titan
- * et olympiennes viennent plus tard — titan dès qu'un deuxième jeu de
- * teintes par dieu a du sens, olympien dès qu'un premier modèle 3D de tenue
- * existe (voir assets/models/README.md) — aucune tant qu'aucun `.glb` n'est
- * déposé, pour ne pas référencer un `modelRef` qui pointe vers rien.
+ * La plupart ci-dessous sont de rareté héros (500 lauriers) : le premier
+ * palier payant, celui qu'on achète sur un coup de tête.
+ *
+ * Les paliers supérieurs suivent le tarif posé par `LAUREL_PACKS` (titan à
+ * 800, olympien à 1 200) dès qu'une illustration existe pour les porter
+ * (`assets/skins/titanesque/` et `assets/skins/olympienne/`, voir leur
+ * README) :
+ *
+ * - Le titan de Poséidon reste une recoloration (`RecoloredSkin`) — sa
+ *   couleur/accent sont repris de son illustration (bleu-turquoise royal,
+ *   liséré or), l'illustration elle-même n'étant qu'un `preview`.
+ * - Les olympiennes (`LegendarySkin`) n'ont toujours pas de `.glb` — voir
+ *   l'avertissement sur `LegendarySkin.modelRef` — mais leur `preview`
+ *   suffit à les distinguer dans la boutique et sur la fiche d'un dieu.
+ *   `modelRef` porte pour l'instant le nom de fichier de l'illustration,
+ *   en attendant le modèle 3D qui portera la même clé.
  */
 const PURCHASABLE: readonly Skin[] = [
   { id: 'hermes-nuit', characterId: 'hermes', rarity: 'heros', label: 'Nuit', color: 0x1e3a8a, accent: 0x93c5fd, price: 500 },
@@ -150,6 +189,54 @@ const PURCHASABLE: readonly Skin[] = [
   { id: 'athena-bronze', characterId: 'athena', rarity: 'heros', label: 'Bronze', color: 0x78350f, accent: 0xfcd34d, price: 500 },
   { id: 'hades-braise', characterId: 'hades', rarity: 'heros', label: 'Braise', color: 0x431407, accent: 0xfb923c, price: 500 },
   { id: 'ares-fer', characterId: 'ares', rarity: 'heros', label: 'Fer', color: 0x44403c, accent: 0xe7e5e4, price: 500 },
+
+  {
+    id: 'poseidon-roi-des-abysses',
+    characterId: 'poseidon',
+    rarity: 'titan',
+    label: 'Roi des Abysses',
+    color: 0x0e4c5c,
+    accent: 0xe0b34a,
+    price: 800,
+    preview: POSEIDON_ROI_DES_ABYSSES,
+  },
+
+  {
+    id: 'zeus-foudre-imperiale',
+    characterId: 'zeus',
+    rarity: 'olympien',
+    label: 'Foudre Impériale',
+    modelRef: 'zeus_foudre_imperiale',
+    price: 1200,
+    preview: ZEUS_FOUDRE_IMPERIALE,
+  },
+  {
+    id: 'ares-rage-du-lion',
+    characterId: 'ares',
+    rarity: 'olympien',
+    label: 'Rage du Lion',
+    modelRef: 'ares_rage_du_lion',
+    price: 1200,
+    preview: ARES_RAGE_DU_LION,
+  },
+  {
+    id: 'athena-sagesse-celeste',
+    characterId: 'athena',
+    rarity: 'olympien',
+    label: 'Sagesse Céleste',
+    modelRef: 'athena_sagesse_celeste',
+    price: 1200,
+    preview: ATHENA_SAGESSE_CELESTE,
+  },
+  {
+    id: 'hermes-messager-d-or',
+    characterId: 'hermes',
+    rarity: 'olympien',
+    label: 'Messager d\'Or',
+    modelRef: 'hermes_messager_d_or',
+    price: 1200,
+    preview: HERMES_MESSAGER_D_OR,
+  },
 ];
 
 /** Toutes les parures d'un dieu, l'origine en tête. */

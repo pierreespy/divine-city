@@ -12,7 +12,7 @@
  */
 
 import { useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { CHARACTER_ORDER, CHARACTERS, characterById, type CharacterId } from '../../entities/characters/roster';
 import { characterPrice, ownsCharacter, ownsSkin, type Progression } from '../../meta/progression';
 import { RARITY_COLOR, skinsOf } from '../../meta/store';
@@ -112,15 +112,19 @@ export function OlympeTab({ state, onSelectCharacter, onBuyCharacter, onBuySkin,
                     pressed && styles.pressed,
                   ]}
                 >
-                  <View
-                    style={[
-                      styles.skinDot,
-                      {
-                        backgroundColor: hex(isModel ? character.appearance.color : skin.color),
-                        borderColor: hex(RARITY_COLOR[skin.rarity]),
-                      },
-                    ]}
-                  />
+                  {skin.preview !== undefined ? (
+                    <Image source={skin.preview} style={styles.skinPreview} resizeMode="contain" />
+                  ) : (
+                    <View
+                      style={[
+                        styles.skinDot,
+                        {
+                          backgroundColor: hex(isModel ? character.appearance.color : skin.color),
+                          borderColor: hex(RARITY_COLOR[skin.rarity]),
+                        },
+                      ]}
+                    />
+                  )}
                   <Text style={styles.skinLabel} numberOfLines={1}>
                     {skin.label}
                   </Text>
@@ -289,6 +293,7 @@ const styles = StyleSheet.create({
   },
   skinOn: { borderColor: COLORS.borderStrong, backgroundColor: COLORS.gold },
   skinDot: { width: 14, height: 14, borderRadius: 7, borderWidth: 2 },
+  skinPreview: { width: 22, height: 22 },
   skinLabel: { ...TYPE.body, fontSize: 12, color: COLORS.text },
   skinPrice: { flexDirection: 'row', alignItems: 'center', gap: 2 },
   skinPriceText: { ...TYPE.tiny, color: COLORS.text },

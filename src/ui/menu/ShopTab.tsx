@@ -22,7 +22,7 @@
  * parure porte donc toujours l'icône du laurier, jamais celle de l'or.
  */
 
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Image, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { CHARACTER_ORDER, characterById, type CharacterId } from '../../entities/characters/roster';
 import { characterPrice, ownsCharacter, ownsSkin, type Progression } from '../../meta/progression';
 import { GOLD_PACKS, LAUREL_PACKS, purchasableSkins, RARITY_COLOR } from '../../meta/store';
@@ -117,20 +117,24 @@ export function ShopTab({ state, onBuyCharacter, onBuySkin }: Props) {
               const characterAppearance = characterById(skin.characterId).appearance;
               // Une recolorée (mortel/héros/titan) se reconnaît d'un coup
               // d'œil à sa couleur ; une olympienne est un modèle 3D à part,
-              // pas encore prévisualisable ici — le cadre à la teinte de sa
-              // rareté suffit à la distinguer tant qu'il n'y a pas d'aperçu
-              // du modèle.
+              // pas encore prévisualisable en jeu — mais son illustration
+              // (`preview`), quand elle existe, vaut mieux que le rond de
+              // couleur uni.
               return (
                 <Card key={skin.id} style={[styles.skin, isModel && styles.skinLegendary]}>
-                  <View
-                    style={[
-                      styles.skinDot,
-                      {
-                        backgroundColor: hex(isModel ? characterAppearance.color : skin.color),
-                        borderColor: hex(RARITY_COLOR[skin.rarity]),
-                      },
-                    ]}
-                  />
+                  {skin.preview !== undefined ? (
+                    <Image source={skin.preview} style={styles.skinPreview} resizeMode="contain" />
+                  ) : (
+                    <View
+                      style={[
+                        styles.skinDot,
+                        {
+                          backgroundColor: hex(isModel ? characterAppearance.color : skin.color),
+                          borderColor: hex(RARITY_COLOR[skin.rarity]),
+                        },
+                      ]}
+                    />
+                  )}
                   <Text style={styles.skinLabel} numberOfLines={1}>
                     {skin.label}
                   </Text>
@@ -232,6 +236,7 @@ const styles = StyleSheet.create({
   // faut un autre repère visuel — cohérent avec le laurier de son prix.
   skinLegendary: { borderColor: COLORS.gold, borderWidth: 2 },
   skinDot: { width: 30, height: 30, borderRadius: 15, borderWidth: 3 },
+  skinPreview: { width: 56, height: 56 },
   skinLabel: { ...TYPE.strong, fontSize: 13, color: COLORS.text },
   skinGod: { ...TYPE.body, fontSize: 11, color: COLORS.muted },
   skinButton: { alignSelf: 'stretch', marginTop: SPACE.xs, minHeight: 34 },
