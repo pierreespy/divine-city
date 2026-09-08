@@ -395,11 +395,18 @@ function GlowGradient() {
 
 /**
  * L'ombre de la lueur, dans la marge sous la barre : un seul OVALE PLAT,
- * comme une ombre portée au sol sous la barre — pas un halo dégradé,
- * pas un empilement de couches. `boxWidth` et `boxHeight` sont ceux de la
- * boîte qui le porte (une dalle de large, la marge de sécurité de haut) ;
- * l'ovale y est centré, large et bas (`borderRadius` égal à sa demi-hauteur,
- * donc parfaitement arrondi aux deux bouts).
+ * comme une ombre portée au sol sous la barre — pas un halo dégradé, pas
+ * un empilement de couches. `boxWidth` et `boxHeight` sont ceux de la boîte
+ * qui le porte (une dalle de large, la marge de sécurité de haut).
+ *
+ * ⚠️ Un VRAI ovale, pas un rectangle aux coins arrondis : `borderRadius`
+ * ne sait dessiner qu'un coin CIRCULAIRE (le même rayon dans les deux
+ * sens), donc appliqué à une boîte large et basse il donne une pilule —
+ * deux bouts en demi-cercle, des côtés droits entre eux — pas la courbe
+ * continue d'une ellipse. L'astuce est de dessiner un CERCLE (large comme
+ * l'ovale voulu, `borderRadius` à sa moitié) puis de l'APLATIR avec
+ * `scaleY` : la mise à l'échelle garde la courbure elliptique partout,
+ * là où un rayon de coin ne le peut pas.
  */
 function GlowOval({ boxWidth, boxHeight }: { boxWidth: number; boxHeight: number }) {
   const width = boxWidth * 0.82;
@@ -409,11 +416,15 @@ function GlowOval({ boxWidth, boxHeight }: { boxWidth: number; boxHeight: number
       style={{
         position: 'absolute',
         left: (boxWidth - width) / 2,
-        top: (boxHeight - height) / 2,
+        // Centré sur la hauteur voulue, pas sur celle du cercle avant
+        // aplatissement — `scaleY` réduit sa taille visible autour de son
+        // propre centre, sans déplacer celui-ci.
+        top: (boxHeight - width) / 2,
         width,
-        height,
-        borderRadius: height / 2,
+        height: width,
+        borderRadius: width / 2,
         backgroundColor: 'rgba(255, 225, 150, 0.5)',
+        transform: [{ scaleY: height / width }],
       }}
     />
   );
