@@ -15,11 +15,13 @@
  * au démarrage, et deux dalles le bordent de chaque côté : aucun onglet n'est
  * à plus de deux glissements de pouce, et la barre est symétrique.
  *
- * ⚠️ La barre d'onglets est DESSINÉE d'un seul tenant (`assets/ui/onglets.jpg`) :
- * les cinq dalles, leur icône et leur libellé sont dans l'image, dans l'ordre
- * du ruban. L'écran ne pose que cinq zones cliquables et la LUEUR de l'onglet
- * actif — d'où la disparition du médaillon « Jouer » : le dessin traite les
- * cinq dalles à égalité, et un médaillon en relief par-dessus en recouvrirait
+ * ⚠️ La barre d'onglets est COMPOSÉE, pas dessinée d'un seul tenant : les
+ * cinq dalles de pierre viennent de `onglets_vides.png`, les cinq symboles
+ * de `onglets_symboles.png` (posés par-dessus, dans l'ordre du ruban), et
+ * l'intitulé de chaque onglet est un `Text` de l'écran, sous son symbole.
+ * L'écran pose en plus les cinq zones cliquables et la LUEUR de l'onglet
+ * actif — d'où la disparition du médaillon « Jouer » : les cinq dalles sont
+ * traitées à égalité, et un médaillon en relief par-dessus en recouvrirait
  * une.
  *
  * ⚠️ Les onglets ne sont pas cinq écrans qui se remplacent : ils sont
@@ -42,6 +44,7 @@ import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
 import {
   Animated,
   Image,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -109,24 +112,33 @@ const FRAME = {
 } as const;
 
 /**
- * La barre d'onglets dessinée (`ART.onglets`, 4640 × 928) : sa hauteur en
- * largeurs d'écran, soit exactement un cinquième — cinq dalles carrées.
+ * La barre d'onglets, dalles de pierre (`ART.ongletsVides`, 1024 × 200) :
+ * sa hauteur en largeurs d'écran, soit exactement un cinquième — cinq
+ * dalles carrées.
  */
-const TAB_BAR_HEIGHT = 928 / 4640;
+const TAB_BAR_HEIGHT = 200 / 1024;
+
+/**
+ * Où poser les symboles (`ART.ongletsSymboles`) DANS une dalle, en fractions
+ * de la hauteur de la barre : ils occupent le haut, et laissent le bas au
+ * libellé posé par `TabBar`.
+ */
+const TAB_SYMBOLS = { top: 0.08, height: 0.54 } as const;
 
 /**
  * L'ordre à l'écran, de gauche à droite. « Jouer » au milieu, encadré par
  * deux dalles de chaque côté.
  *
- * ⚠️ Il n'y a plus ni icône ni intitulé à poser : le dessin de la barre les
- * porte déjà, dans cet ordre-ci. Ce qui reste est ce qu'une image ne sait pas
- * faire — le nom lu à voix haute, et l'onglet vers lequel on saute.
+ * ⚠️ Le symbole de chaque dalle vient de `ART.ongletsSymboles`, dans ce
+ * même ordre — mais le libellé, lui, est posé par `TabBar` : c'est ce
+ * qu'une image seule ne sait pas faire, avec le nom lu à voix haute et
+ * l'onglet vers lequel on saute.
  */
 const TABS: { id: MenuTab; label: string }[] = [
   { id: 'quetes', label: 'Quêtes' },
   { id: 'olympe', label: 'Olympe' },
   { id: 'play', label: 'Jouer' },
-  { id: 'pass', label: 'Passe' },
+  { id: 'pass', label: 'Passe de Combat' },
   { id: 'shop', label: 'Boutique' },
 ];
 
@@ -359,7 +371,7 @@ function TabBar({
   return (
     <View style={[styles.tabBar, { height }]}>
       <Image
-        source={ART.onglets}
+        source={ART.ongletsVides}
         // `stretch` sur une boîte déjà à la proportion du dessin ne déforme
         // rien : la frise est étirée d'un bord à l'autre de l'écran, comme
         // le bandeau du haut.
@@ -367,6 +379,22 @@ function TabBar({
         accessible={false}
         importantForAccessibility="no"
         style={{ position: 'absolute', left: 0, top: 0, width: pageWidth, height }}
+      />
+
+      <Image
+        source={ART.ongletsSymboles}
+        // Même largeur que les dalles, mais cantonné à leur haut : le bas
+        // reste pour le libellé, posé juste en dessous (`styles.tabLabels`).
+        resizeMode="stretch"
+        accessible={false}
+        importantForAccessibility="no"
+        style={{
+          position: 'absolute',
+          left: 0,
+          top: height * TAB_SYMBOLS.top,
+          width: pageWidth,
+          height: height * TAB_SYMBOLS.height,
+        }}
       />
 
       <Animated.View
@@ -398,6 +426,23 @@ function TabBar({
           style={StyleSheet.absoluteFill}
         />
       </Animated.View>
+
+      {/* Les libellés, sous les symboles : le seul texte que le dessin des
+          dalles ne porte pas. `pointerEvents="none"` — le clic reste au
+          `Pressable` du dessous, sur toute la dalle. */}
+      <View
+        pointerEvents="none"
+        style={[
+          styles.tabLabels,
+          { top: height * (TAB_SYMBOLS.top + TAB_SYMBOLS.height), bottom: 0 },
+        ]}
+      >
+        {TABS.map((tab) => (
+          <Text key={tab.id} style={styles.tabLabel} numberOfLines={2} minimumFontScale={0.8} adjustsFontSizeToFit>
+            {tab.label}
+          </Text>
+        ))}
+      </View>
 
       <View style={styles.tabRow}>
         {TABS.map((tab, i) => (
@@ -624,6 +669,31 @@ const styles = StyleSheet.create({
   // elle passerait sur le décor au-dessus de la barre.
   tabBar: { overflow: 'hidden' },
   glow: { position: 'absolute', left: 0, overflow: 'hidden' },
+  // Le rang des libellés, sous les symboles : cinq cases, une par dalle,
+  // alignées sur les mêmes colonnes que `tabRow`.
+  tabLabels: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+  },
+  // ⚠️ Police et couleur demandées telles quelles, pas les deux polices du
+  // menu (voir `theme.ts`) : c'est un texte SERIF gras et italique, sur les
+  // dalles de pierre, pas une capitale gravée. `fontWeight`/`fontStyle`
+  // jouent normalement ici — la famille est une police SYSTÈME (générique
+  // « serif »), pas l'une des graisses chargées à la main par `App.tsx`.
+  tabLabel: {
+    flex: 1,
+    textAlign: 'center',
+    paddingHorizontal: 4,
+    fontFamily: Platform.select({ ios: 'Georgia', default: 'serif' }),
+    fontWeight: 'bold',
+    fontStyle: 'italic',
+    fontSize: 13,
+    lineHeight: 15,
+    color: '#e8c4ac',
+  },
   tabRow: { flexDirection: 'row', height: '100%' },
   // Une zone cliquable, et rien d'autre : l'icône et l'intitulé sont dans le
   // dessin. Elle ne peint qu'au toucher, pour dire que l'appui a été pris.

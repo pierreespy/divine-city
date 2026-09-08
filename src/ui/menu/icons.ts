@@ -61,14 +61,18 @@ export const ART = {
    */
   maquette: require('../../../assets/ui/maquette.png') as ImageSourcePropType,
   /**
-   * La barre d'onglets ENTIÈRE : les cinq dalles, icône et libellé compris,
-   * dans l'ordre du ruban. L'écran ne pose que les zones cliquables et la
-   * lueur de l'onglet actif.
-   *
-   * ⚠️ C'est un JPEG, et c'est normal : la frise est pleine largeur et
-   * opaque, elle n'a rien à laisser voir derrière elle.
+   * La barre d'onglets, VIDE : les cinq dalles de pierre, sans icône ni
+   * libellé. L'écran pose par-dessus les symboles (`ongletsSymboles`) et
+   * les intitulés (voir `TabBar`) — ce sont eux qui savent lesquels des
+   * cinq onglets existent, dans quel ordre, et sous quel nom.
    */
-  onglets: require('../../../assets/ui/onglets.jpg') as ImageSourcePropType,
+  ongletsVides: require('../../../assets/ui/onglets_vides.png') as ImageSourcePropType,
+  /**
+   * Les cinq symboles de la barre d'onglets, à plat sur fond transparent,
+   * dans l'ordre du ruban (quêtes, olympe, épées, casque ailé, amphore).
+   * Posés par `TabBar` sur `ongletsVides`, au-dessus des libellés.
+   */
+  ongletsSymboles: require('../../../assets/ui/onglets_symboles.png') as ImageSourcePropType,
   /** Les dunes et leur chimère, sur la carte de la course. */
   course: require('../../../assets/ui/course.png') as ImageSourcePropType,
   /** Les combattants sous l'orage, sur la carte de l'arène. */
