@@ -112,7 +112,7 @@ function questsOf(state: Progression): { daily: Quest[]; weekly: Quest[] } {
         id: 'pantheon',
         label: 'Réunir trois divinités',
         note: 'Les autres s’achètent au panthéon, en or.',
-        done: Math.min(state.ownedGods.length, 3),
+        done: Math.min(state.ownedCharacters.length, 3),
         goal: 3,
         rewards: [
           { tone: 'gold', amount: 200 },

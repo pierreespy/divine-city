@@ -54,7 +54,7 @@ import {
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { ART } from './icons';
-import type { GodId } from '../../entities/gods/roster';
+import type { CharacterId } from '../../entities/characters/roster';
 import type { Progression } from '../../meta/progression';
 import { OlympeTab } from './OlympeTab';
 import { PassTab } from './PassTab';
@@ -139,9 +139,9 @@ const indexOf = (id: MenuTab) => TABS.findIndex((t) => t.id === id);
 interface Props {
   state: Progression;
   onPlay: () => void;
-  onBuyGod: (godId: GodId) => void;
+  onBuyCharacter: (characterId: CharacterId) => void;
   onBuySkin: (skinId: string) => void;
-  onSelectGod: (godId: GodId) => void;
+  onSelectCharacter: (characterId: CharacterId) => void;
   onEquipSkin: (skinId: string) => void;
   onResetProgression: () => void;
   showStats: boolean;
@@ -151,9 +151,9 @@ interface Props {
 export function MenuScreen({
   state,
   onPlay,
-  onBuyGod,
+  onBuyCharacter,
   onBuySkin,
-  onSelectGod,
+  onSelectCharacter,
   onEquipSkin,
   onResetProgression,
   showStats,
@@ -267,8 +267,8 @@ export function MenuScreen({
             <Page width={pageWidth} height={naveHeight} framed title="Olympe">
               <OlympeTab
                 state={state}
-                onSelectGod={onSelectGod}
-                onBuyGod={onBuyGod}
+                onSelectCharacter={onSelectCharacter}
+                onBuyCharacter={onBuyCharacter}
                 onBuySkin={onBuySkin}
                 onEquipSkin={onEquipSkin}
               />
@@ -283,7 +283,7 @@ export function MenuScreen({
             </Page>
 
             <Page width={pageWidth} height={naveHeight} framed title="Boutique">
-              <ShopTab state={state} onBuyGod={onBuyGod} onBuySkin={onBuySkin} />
+              <ShopTab state={state} onBuyCharacter={onBuyCharacter} onBuySkin={onBuySkin} />
             </Page>
           </Animated.ScrollView>
         </View>

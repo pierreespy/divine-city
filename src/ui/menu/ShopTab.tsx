@@ -23,22 +23,22 @@
  */
 
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
-import { GOD_ORDER, godById, type GodId } from '../../entities/gods/roster';
-import { godPrice, ownsGod, ownsSkin, type Progression } from '../../meta/progression';
+import { CHARACTER_ORDER, characterById, type CharacterId } from '../../entities/characters/roster';
+import { characterPrice, ownsCharacter, ownsSkin, type Progression } from '../../meta/progression';
 import { GOLD_PACKS, LAUREL_PACKS, purchasableSkins, RARITY_COLOR } from '../../meta/store';
 import { Button, Card, Coin, GodBadge, Laurel, SectionTitle } from './parts';
 import { COLORS, RADIUS, SPACE, TYPE, hex } from './theme';
 
 interface Props {
   state: Progression;
-  onBuyGod: (godId: GodId) => void;
+  onBuyCharacter: (characterId: CharacterId) => void;
   onBuySkin: (skinId: string) => void;
 }
 
-export function ShopTab({ state, onBuyGod, onBuySkin }: Props) {
-  const gods = GOD_ORDER.filter((id) => !ownsGod(state, id));
+export function ShopTab({ state, onBuyCharacter, onBuySkin }: Props) {
+  const characters = CHARACTER_ORDER.filter((id) => !ownsCharacter(state, id));
   const skins = purchasableSkins().filter(
-    (skin) => ownsGod(state, skin.godId) && !ownsSkin(state, skin.id),
+    (skin) => ownsCharacter(state, skin.characterId) && !ownsSkin(state, skin.id),
   );
   const featured = GOLD_PACKS.find((pack) => pack.featured) ?? GOLD_PACKS[0];
 
@@ -76,21 +76,21 @@ export function ShopTab({ state, onBuyGod, onBuySkin }: Props) {
         ))}
       </View>
 
-      {gods.length > 0 && (
+      {characters.length > 0 && (
         <>
           <SectionTitle>Divinités</SectionTitle>
-          {gods.map((id) => {
-            const god = godById(id);
-            const price = godPrice(id);
+          {characters.map((id) => {
+            const character = characterById(id);
+            const price = characterPrice(id);
             return (
               <Card key={id} style={styles.row}>
-                <GodBadge color={god.appearance.color} accent={god.appearance.accent} size={44} />
+                <GodBadge color={character.appearance.color} accent={character.appearance.accent} size={44} />
                 <View style={styles.rowText}>
                   <Text style={styles.rowTitle} numberOfLines={1}>
-                    {god.label}
+                    {character.label}
                   </Text>
                   <Text style={styles.rowSub} numberOfLines={1}>
-                    {god.domain}
+                    {character.domain}
                   </Text>
                 </View>
                 <Button
@@ -98,8 +98,8 @@ export function ShopTab({ state, onBuyGod, onBuySkin }: Props) {
                   label={price.toLocaleString('fr-FR')}
                   variant="primary"
                   disabled={state.gold < price}
-                  onPress={() => onBuyGod(id)}
-                  hint={`Acheter ${god.label} pour ${price} or`}
+                  onPress={() => onBuyCharacter(id)}
+                  hint={`Acheter ${character.label} pour ${price} or`}
                   style={styles.rowButton}
                 />
               </Card>
@@ -114,7 +114,7 @@ export function ShopTab({ state, onBuyGod, onBuySkin }: Props) {
           <View style={styles.skinRow}>
             {skins.map((skin) => {
               const isModel = skin.rarity === 'olympien';
-              const godAppearance = godById(skin.godId).appearance;
+              const characterAppearance = characterById(skin.characterId).appearance;
               // Une recolorée (mortel/héros/titan) se reconnaît d'un coup
               // d'œil à sa couleur ; une olympienne est un modèle 3D à part,
               // pas encore prévisualisable ici — le cadre à la teinte de sa
@@ -126,7 +126,7 @@ export function ShopTab({ state, onBuyGod, onBuySkin }: Props) {
                     style={[
                       styles.skinDot,
                       {
-                        backgroundColor: hex(isModel ? godAppearance.color : skin.color),
+                        backgroundColor: hex(isModel ? characterAppearance.color : skin.color),
                         borderColor: hex(RARITY_COLOR[skin.rarity]),
                       },
                     ]}
@@ -135,7 +135,7 @@ export function ShopTab({ state, onBuyGod, onBuySkin }: Props) {
                     {skin.label}
                   </Text>
                   <Text style={styles.skinGod} numberOfLines={1}>
-                    {godById(skin.godId).label}
+                    {characterById(skin.characterId).label}
                   </Text>
                   <Button
                     testID={`buy-${skin.id}`}
@@ -159,7 +159,7 @@ export function ShopTab({ state, onBuyGod, onBuySkin }: Props) {
         </>
       )}
 
-      {gods.length === 0 && skins.length === 0 && (
+      {characters.length === 0 && skins.length === 0 && (
         <Text style={styles.empty}>
           Tout le panthéon est à toi, et toutes ses parures. Il ne reste qu'à courir.
         </Text>

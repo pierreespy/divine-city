@@ -8,14 +8,14 @@
  */
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import type { GodId } from '../entities/gods/roster';
+import type { CharacterId } from '../entities/characters/roster';
 import {
-  buyGod,
+  buyCharacter,
   buySkin,
   equipSkin,
   finishRun,
   initialProgression,
-  selectGod,
+  selectCharacter,
   type Progression,
 } from './progression';
 import { clearProgression, loadProgression, saveProgression } from './storage';
@@ -24,9 +24,9 @@ export interface ProgressionApi {
   state: Progression;
   /** Faux tant que la sauvegarde n'est pas relue : évite d'afficher 0 or puis 340. */
   ready: boolean;
-  buyGod: (godId: GodId) => void;
+  buyCharacter: (characterId: CharacterId) => void;
   buySkin: (skinId: string) => void;
-  selectGod: (godId: GodId) => void;
+  selectCharacter: (characterId: CharacterId) => void;
   equipSkin: (skinId: string) => void;
   finishRun: (faithful: number) => void;
   reset: () => void;
@@ -60,9 +60,9 @@ export function useProgression(): ProgressionApi {
   return {
     state,
     ready,
-    buyGod: useCallback((godId: GodId) => setState((s) => buyGod(s, godId)), []),
+    buyCharacter: useCallback((characterId: CharacterId) => setState((s) => buyCharacter(s, characterId)), []),
     buySkin: useCallback((skinId: string) => setState((s) => buySkin(s, skinId)), []),
-    selectGod: useCallback((godId: GodId) => setState((s) => selectGod(s, godId)), []),
+    selectCharacter: useCallback((characterId: CharacterId) => setState((s) => selectCharacter(s, characterId)), []),
     equipSkin: useCallback((skinId: string) => setState((s) => equipSkin(s, skinId)), []),
     finishRun: useCallback((faithful: number) => setState((s) => finishRun(s, faithful)), []),
     reset: useCallback(() => {

@@ -2,7 +2,7 @@
  * store.ts — le catalogue du magasin : prix, parures, paquets d'or et de
  * lauriers.
  *
- * ⚠️ Pourquoi ce fichier n'est PAS dans `entities/gods/roster.ts`.
+ * ⚠️ Pourquoi ce fichier n'est PAS dans `entities/characters/roster.ts`.
  *
  * Le roster décrit ce qu'un dieu **est** : sa couleur, sa capacité, ses
  * réglages. Ce qu'il **coûte** n'est pas de la même nature — c'est une
@@ -15,12 +15,11 @@
  * parure ne doit toucher ni le jeu, ni l'écran du magasin.
  */
 
-import { GOD_ORDER, GODS, type GodId } from '../entities/gods/roster';
+import { CHARACTER_ORDER, CHARACTERS, type CharacterId } from '../entities/characters/roster';
 
 /**
  * Une parure a quatre raretés, décidées le 2026-09-08 (remplace l'ancien
- * système à deux paliers commune/légendaire, toujours en vigueur pour la
- * FORME de la parure mais plus pour son prix — voir plus bas) :
+ * système à deux paliers commune/légendaire) :
  *
  * - **mortel** (gris) — la parure d'origine, fournie avec le dieu.
  * - **héros** (bleu) — un achat d'impulsion.
@@ -36,9 +35,16 @@ import { GOD_ORDER, GODS, type GodId } from '../entities/gods/roster';
  *
  * Toutes les parures payantes se paient désormais en lauriers, y compris
  * celles qui ne sont qu'une recoloration : l'or ne finance plus que les
- * divinités (voir `GOD_PRICES`), pour que la distinction entre les deux
- * monnaies reste nette — l'or est ce qu'on gagne en jouant, le laurier ce
- * qu'on achète ou qu'on mérite.
+ * divinités (voir `CHARACTER_PRICES`), pour que la distinction entre les
+ * deux monnaies reste nette — l'or est ce qu'on gagne en jouant, le laurier
+ * ce qu'on achète ou qu'on mérite.
+ *
+ * L'union discriminée par `rarity` (plutôt qu'un type unique à champs
+ * optionnels) empêche STRUCTURELLEMENT une parure olympienne de porter son
+ * propre `accent` : le halo du cortège reste toujours celui du dieu
+ * (`CharacterAppearance.accent`, dans le roster), quelle que soit la tenue
+ * portée — ce n'est pas une convention à respecter, le type ne laisse pas le
+ * champ exister sur `LegendarySkin`.
  */
 export type SkinRarity = 'mortel' | 'heros' | 'titan' | 'olympien';
 
@@ -60,7 +66,7 @@ export const RARITY_COLOR: Readonly<Record<SkinRarity, number>> = {
 
 interface SkinBase {
   readonly id: string;
-  readonly godId: GodId;
+  readonly characterId: CharacterId;
   /** Le nom affiché — court, il tient sur une vignette. */
   readonly label: string;
 }
@@ -101,20 +107,20 @@ export type Skin = RecoloredSkin | LegendarySkin;
  * vivent déjà dans le roster. La dériver évite de les recopier — donc de les
  * voir diverger le jour où l'on retouchera une teinte.
  */
-export function defaultSkinId(godId: GodId): string {
-  return `${godId}-origine`;
+export function defaultSkinId(characterId: CharacterId): string {
+  return `${characterId}-origine`;
 }
 
 /** La parure d'origine, fabriquée à partir de la ligne du dieu. Toujours mortelle. */
-function originSkin(godId: GodId): RecoloredSkin {
-  const god = GODS[godId];
+function originSkin(characterId: CharacterId): RecoloredSkin {
+  const character = CHARACTERS[characterId];
   return {
-    id: defaultSkinId(godId),
-    godId,
+    id: defaultSkinId(characterId),
+    characterId,
     rarity: 'mortel',
     label: 'Origine',
-    color: god.appearance.color,
-    accent: god.appearance.accent,
+    color: character.appearance.color,
+    accent: character.appearance.accent,
     price: 0,
   };
 }
@@ -132,28 +138,29 @@ function originSkin(godId: GodId): RecoloredSkin {
  * palier payant, celui qu'on achète sur un coup de tête. Les parures titan
  * et olympiennes viennent plus tard — titan dès qu'un deuxième jeu de
  * teintes par dieu a du sens, olympien dès qu'un premier modèle 3D de tenue
- * existe (voir assets/models/README.md).
+ * existe (voir assets/models/README.md) — aucune tant qu'aucun `.glb` n'est
+ * déposé, pour ne pas référencer un `modelRef` qui pointe vers rien.
  */
 const PURCHASABLE: readonly Skin[] = [
-  { id: 'hermes-nuit', godId: 'hermes', rarity: 'heros', label: 'Nuit', color: 0x1e3a8a, accent: 0x93c5fd, price: 500 },
-  { id: 'hermes-olive', godId: 'hermes', rarity: 'heros', label: 'Olivier', color: 0x3f6212, accent: 0xbef264, price: 500 },
-  { id: 'zeus-orage', godId: 'zeus', rarity: 'heros', label: 'Orage', color: 0x3f3f46, accent: 0xfef08a, price: 500 },
-  { id: 'aphrodite-aurore', godId: 'aphrodite', rarity: 'heros', label: 'Aurore', color: 0x9d174d, accent: 0xfecdd3, price: 500 },
-  { id: 'poseidon-abysse', godId: 'poseidon', rarity: 'heros', label: 'Abysse', color: 0x134e4a, accent: 0x5eead4, price: 500 },
-  { id: 'athena-bronze', godId: 'athena', rarity: 'heros', label: 'Bronze', color: 0x78350f, accent: 0xfcd34d, price: 500 },
-  { id: 'hades-braise', godId: 'hades', rarity: 'heros', label: 'Braise', color: 0x431407, accent: 0xfb923c, price: 500 },
-  { id: 'ares-fer', godId: 'ares', rarity: 'heros', label: 'Fer', color: 0x44403c, accent: 0xe7e5e4, price: 500 },
+  { id: 'hermes-nuit', characterId: 'hermes', rarity: 'heros', label: 'Nuit', color: 0x1e3a8a, accent: 0x93c5fd, price: 500 },
+  { id: 'hermes-olive', characterId: 'hermes', rarity: 'heros', label: 'Olivier', color: 0x3f6212, accent: 0xbef264, price: 500 },
+  { id: 'zeus-orage', characterId: 'zeus', rarity: 'heros', label: 'Orage', color: 0x3f3f46, accent: 0xfef08a, price: 500 },
+  { id: 'aphrodite-aurore', characterId: 'aphrodite', rarity: 'heros', label: 'Aurore', color: 0x9d174d, accent: 0xfecdd3, price: 500 },
+  { id: 'poseidon-abysse', characterId: 'poseidon', rarity: 'heros', label: 'Abysse', color: 0x134e4a, accent: 0x5eead4, price: 500 },
+  { id: 'athena-bronze', characterId: 'athena', rarity: 'heros', label: 'Bronze', color: 0x78350f, accent: 0xfcd34d, price: 500 },
+  { id: 'hades-braise', characterId: 'hades', rarity: 'heros', label: 'Braise', color: 0x431407, accent: 0xfb923c, price: 500 },
+  { id: 'ares-fer', characterId: 'ares', rarity: 'heros', label: 'Fer', color: 0x44403c, accent: 0xe7e5e4, price: 500 },
 ];
 
 /** Toutes les parures d'un dieu, l'origine en tête. */
-export function skinsOf(godId: GodId): Skin[] {
-  return [originSkin(godId), ...PURCHASABLE.filter((skin) => skin.godId === godId)];
+export function skinsOf(characterId: CharacterId): Skin[] {
+  return [originSkin(characterId), ...PURCHASABLE.filter((skin) => skin.characterId === characterId)];
 }
 
 /** La parure portant cet identifiant, ou `null` si personne ne la connaît. */
 export function skinById(id: string): Skin | null {
-  for (const godId of GOD_ORDER) {
-    const found = skinsOf(godId).find((skin) => skin.id === id);
+  for (const characterId of CHARACTER_ORDER) {
+    const found = skinsOf(characterId).find((skin) => skin.id === id);
     if (found !== undefined) return found;
   }
   return null;
@@ -161,7 +168,7 @@ export function skinById(id: string): Skin | null {
 
 /** Toutes les parures achetables, dans l'ordre d'affichage des dieux. */
 export function purchasableSkins(): Skin[] {
-  return GOD_ORDER.flatMap((godId) => PURCHASABLE.filter((skin) => skin.godId === godId));
+  return CHARACTER_ORDER.flatMap((characterId) => PURCHASABLE.filter((skin) => skin.characterId === characterId));
 }
 
 /**
@@ -170,7 +177,7 @@ export function purchasableSkins(): Skin[] {
  * Les deux dieux fournis d'emblée (`unlockedFromStart`) n'y figurent pas :
  * on ne vend pas ce que le joueur possède déjà.
  */
-export const GOD_PRICES: Readonly<Record<GodId, number>> = {
+export const CHARACTER_PRICES: Readonly<Record<CharacterId, number>> = {
   hermes: 0,
   zeus: 0,
   aphrodite: 400,

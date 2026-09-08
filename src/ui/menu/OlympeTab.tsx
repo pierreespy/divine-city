@@ -13,27 +13,27 @@
 
 import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { GOD_ORDER, GODS, godById, type GodId } from '../../entities/gods/roster';
-import { godPrice, ownsGod, ownsSkin, type Progression } from '../../meta/progression';
+import { CHARACTER_ORDER, CHARACTERS, characterById, type CharacterId } from '../../entities/characters/roster';
+import { characterPrice, ownsCharacter, ownsSkin, type Progression } from '../../meta/progression';
 import { RARITY_COLOR, skinsOf } from '../../meta/store';
 import { Button, Card, Coin, GodBadge, Laurel, Plaque } from './parts';
 import { COLORS, RADIUS, SPACE, TYPE, hex } from './theme';
 
 interface Props {
   state: Progression;
-  onSelectGod: (godId: GodId) => void;
-  onBuyGod: (godId: GodId) => void;
+  onSelectCharacter: (characterId: CharacterId) => void;
+  onBuyCharacter: (characterId: CharacterId) => void;
   onBuySkin: (skinId: string) => void;
   onEquipSkin: (skinId: string) => void;
 }
 
-export function OlympeTab({ state, onSelectGod, onBuyGod, onBuySkin, onEquipSkin }: Props) {
+export function OlympeTab({ state, onSelectCharacter, onBuyCharacter, onBuySkin, onEquipSkin }: Props) {
   // La vignette REGARDÉE, qui n'est pas la divinité CHOISIE : on consulte la
   // fiche d'Arès sans pour autant partir jouer avec lui.
-  const [looking, setLooking] = useState<GodId>(state.selectedGod);
-  const god = godById(looking);
-  const owned = ownsGod(state, looking);
-  const price = godPrice(looking);
+  const [looking, setLooking] = useState<CharacterId>(state.selectedCharacter);
+  const character = characterById(looking);
+  const owned = ownsCharacter(state, looking);
+  const price = characterPrice(looking);
   const skins = skinsOf(looking);
   const equipped = state.equippedSkins[looking];
 
@@ -41,7 +41,7 @@ export function OlympeTab({ state, onSelectGod, onBuyGod, onBuySkin, onEquipSkin
     <View style={styles.root}>
       <ScrollView style={styles.grid} contentContainerStyle={styles.gridContent} nestedScrollEnabled>
         <View style={styles.row}>
-          {GOD_ORDER.map((id) => (
+          {CHARACTER_ORDER.map((id) => (
             <GodCell
               key={id}
               id={id}
@@ -56,30 +56,30 @@ export function OlympeTab({ state, onSelectGod, onBuyGod, onBuySkin, onEquipSkin
       {/* La fiche. Elle est TOUJOURS là, même pour un dieu verrouillé : c'est
           en la lisant qu'on décide de payer. */}
       <Card style={styles.sheet} selected>
-        <Plaque title={`${god.label}, ${god.domain}`} tone="gold" />
+        <Plaque title={`${character.label}, ${character.domain}`} tone="gold" />
 
         <View style={styles.sheetBody}>
           <View style={styles.portrait}>
             <GodBadge
-              color={god.appearance.color}
-              accent={god.appearance.accent}
+              color={character.appearance.color}
+              accent={character.appearance.accent}
               size={72}
               dimmed={!owned}
             />
             <Text style={styles.portraitName} numberOfLines={2}>
-              {god.label.toUpperCase()}
+              {character.label.toUpperCase()}
             </Text>
           </View>
 
           <View style={styles.stats}>
-            <Stat label="Effet" value={god.ability.duration === 0 ? 'Instantané' : `${god.ability.duration} s`} />
-            <Stat label="Recharge" value={`${god.ability.cooldown} s`} />
+            <Stat label="Effet" value={character.ability.duration === 0 ? 'Instantané' : `${character.ability.duration} s`} />
+            <Stat label="Recharge" value={`${character.ability.cooldown} s`} />
 
             <View style={styles.ability}>
               <Text style={styles.abilityIcon}>⚡</Text>
               <View style={styles.abilityText}>
                 <Text style={styles.abilityName} numberOfLines={1}>
-                  {god.ability.label.toUpperCase()}
+                  {character.ability.label.toUpperCase()}
                 </Text>
                 <Text style={styles.abilityKind}>(Compétence active)</Text>
               </View>
@@ -89,7 +89,7 @@ export function OlympeTab({ state, onSelectGod, onBuyGod, onBuySkin, onEquipSkin
               encore (M19 à M27). Ce n'est pas un mensonge : c'est ce qui
               distingue les dieux, et le joueur choisit déjà en fonction.
             */}
-            <Text style={styles.abilityDesc}>{god.ability.description}</Text>
+            <Text style={styles.abilityDesc}>{character.ability.description}</Text>
           </View>
         </View>
 
@@ -116,7 +116,7 @@ export function OlympeTab({ state, onSelectGod, onBuyGod, onBuySkin, onEquipSkin
                     style={[
                       styles.skinDot,
                       {
-                        backgroundColor: hex(isModel ? god.appearance.color : skin.color),
+                        backgroundColor: hex(isModel ? character.appearance.color : skin.color),
                         borderColor: hex(RARITY_COLOR[skin.rarity]),
                       },
                     ]}
@@ -139,17 +139,17 @@ export function OlympeTab({ state, onSelectGod, onBuyGod, onBuySkin, onEquipSkin
         <View style={styles.actions}>
           {owned ? (
             <Button
-              testID="select-god"
-              label={state.selectedGod === looking ? 'Divinité choisie' : 'Incarner'}
+              testID="select-character"
+              label={state.selectedCharacter === looking ? 'Divinité choisie' : 'Incarner'}
               variant="primary"
-              disabled={state.selectedGod === looking}
-              onPress={() => onSelectGod(looking)}
-              hint={`Partir jouer avec ${god.label}`}
+              disabled={state.selectedCharacter === looking}
+              onPress={() => onSelectCharacter(looking)}
+              hint={`Partir jouer avec ${character.label}`}
               style={styles.action}
             />
           ) : (
             <Button
-              testID="buy-god"
+              testID="buy-character"
               label="Débloquer"
               variant="primary"
               disabled={state.gold < price}
@@ -159,8 +159,8 @@ export function OlympeTab({ state, onSelectGod, onBuyGod, onBuySkin, onEquipSkin
                   <Text style={styles.buyPrice}>{price.toLocaleString('fr-FR')}</Text>
                 </>
               }
-              onPress={() => onBuyGod(looking)}
-              hint={`Débloquer ${god.label} pour ${price} or`}
+              onPress={() => onBuyCharacter(looking)}
+              hint={`Débloquer ${character.label} pour ${price} or`}
               style={styles.action}
             />
           )}
@@ -177,22 +177,22 @@ function GodCell({
   looking,
   onPress,
 }: {
-  id: GodId;
+  id: CharacterId;
   state: Progression;
   looking: boolean;
   onPress: () => void;
 }) {
-  const god = GODS[id];
-  const owned = ownsGod(state, id);
-  const chosen = state.selectedGod === id;
+  const character = CHARACTERS[id];
+  const owned = ownsCharacter(state, id);
+  const chosen = state.selectedCharacter === id;
 
   return (
     <Pressable
-      testID={`god-${id}`}
+      testID={`character-${id}`}
       onPress={onPress}
       accessibilityRole="button"
       accessibilityState={{ selected: looking }}
-      accessibilityLabel={owned ? god.label : `${god.label}, verrouillé`}
+      accessibilityLabel={owned ? character.label : `${character.label}, verrouillé`}
       style={({ pressed }) => [
         styles.cell,
         looking && styles.cellLooking,
@@ -203,9 +203,9 @@ function GodCell({
       {/* L'étoile marque la divinité avec laquelle on partira jouer — une
           information différente de « celle que je regarde ». */}
       {chosen && <Text style={styles.star}>★</Text>}
-      <GodBadge color={god.appearance.color} accent={god.appearance.accent} size={40} dimmed={!owned} />
+      <GodBadge color={character.appearance.color} accent={character.appearance.accent} size={40} dimmed={!owned} />
       <Text style={[styles.cellName, !owned && styles.cellNameLocked]} numberOfLines={1}>
-        {owned ? god.label : '🔒'}
+        {owned ? character.label : '🔒'}
       </Text>
       {!owned && <Text style={styles.cellLockedText}>VERROUILLÉ</Text>}
     </Pressable>
