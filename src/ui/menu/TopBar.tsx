@@ -28,7 +28,7 @@
 import { Image, Pressable, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import { godById } from '../../entities/gods/roster';
+import { characterById } from '../../entities/characters/roster';
 import { flatColorOf, type Progression } from '../../meta/progression';
 import { rankOf } from '../../meta/rank';
 import { GodBadge } from './parts';
@@ -90,10 +90,10 @@ export function TopBar({
   onOpenSettings: () => void;
   onOpenShop: () => void;
 }) {
-  const god = godById(state.selectedGod);
+  const character = characterById(state.selectedCharacter);
   const appearance = flatColorOf(state);
   const rank = rankOf(state.bestScore);
-  const portrait = PORTRAITS[state.selectedGod];
+  const portrait = PORTRAITS[state.selectedCharacter];
 
   const { width } = useWindowDimensions();
   const w = Math.max(1, Math.round(width));
@@ -160,7 +160,7 @@ export function TopBar({
 
         <View style={[box(SLOTS.name), styles.slot]} pointerEvents="none">
           <Text style={[styles.name, { fontSize: TEXT.name * w }]} numberOfLines={1}>
-            {god.label}
+            {character.label}
           </Text>
         </View>
 

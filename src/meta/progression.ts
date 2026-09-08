@@ -11,8 +11,8 @@
  * état modifié sur place passerait inaperçu.
  */
 
-import { GOD_ORDER, GODS, DEFAULT_GOD_ID, type GodId } from '../entities/gods/roster';
-import { GOD_PRICES, defaultSkinId, skinById, skinsOf } from './store';
+import { CHARACTER_ORDER, CHARACTERS, DEFAULT_CHARACTER_ID, type CharacterId } from '../entities/characters/roster';
+import { CHARACTER_PRICES, defaultSkinId, skinById, skinsOf } from './store';
 
 export interface Progression {
   /** La monnaie de la cité — celle qu'on gagne en jouant. */
@@ -25,13 +25,13 @@ export interface Progression {
    */
   laurels: number;
   /** Les dieux acquis. */
-  ownedGods: GodId[];
+  ownedCharacters: CharacterId[];
   /** Les parures acquises, toutes divinités confondues. */
   ownedSkins: string[];
   /** Le dieu que lancera la prochaine partie. */
-  selectedGod: GodId;
+  selectedCharacter: CharacterId;
   /** La parure portée, pour chaque dieu possédé. */
-  equippedSkins: Partial<Record<GodId, string>>;
+  equippedSkins: Partial<Record<CharacterId, string>>;
   /** Le meilleur score, en fidèles. Affiché sur l'onglet Jouer. */
   bestScore: number;
 }
@@ -43,16 +43,16 @@ export interface Progression {
  * décide pas de ce qui est offert, il lit la même ligne que le jeu.
  */
 export function initialProgression(): Progression {
-  const ownedGods = GOD_ORDER.filter((id) => GODS[id].unlockedFromStart);
-  const equippedSkins: Partial<Record<GodId, string>> = {};
-  for (const id of ownedGods) equippedSkins[id] = defaultSkinId(id);
+  const ownedCharacters = CHARACTER_ORDER.filter((id) => CHARACTERS[id].unlockedFromStart);
+  const equippedSkins: Partial<Record<CharacterId, string>> = {};
+  for (const id of ownedCharacters) equippedSkins[id] = defaultSkinId(id);
 
   return {
     gold: 0,
     laurels: 0,
-    ownedGods,
-    ownedSkins: ownedGods.map(defaultSkinId),
-    selectedGod: ownedGods.includes(DEFAULT_GOD_ID) ? DEFAULT_GOD_ID : ownedGods[0],
+    ownedCharacters,
+    ownedSkins: ownedCharacters.map(defaultSkinId),
+    selectedCharacter: ownedCharacters.includes(DEFAULT_CHARACTER_ID) ? DEFAULT_CHARACTER_ID : ownedCharacters[0],
     equippedSkins,
     bestScore: 0,
   };
@@ -71,8 +71,8 @@ export function reward(faithful: number): number {
   return Math.floor(faithful / 3);
 }
 
-export function ownsGod(state: Progression, godId: GodId): boolean {
-  return state.ownedGods.includes(godId);
+export function ownsCharacter(state: Progression, characterId: CharacterId): boolean {
+  return state.ownedCharacters.includes(characterId);
 }
 
 export function ownsSkin(state: Progression, skinId: string): boolean {
@@ -80,8 +80,8 @@ export function ownsSkin(state: Progression, skinId: string): boolean {
 }
 
 /** Le prix d'un dieu — 0 s'il est fourni d'emblée. */
-export function godPrice(godId: GodId): number {
-  return GOD_PRICES[godId];
+export function characterPrice(characterId: CharacterId): number {
+  return CHARACTER_PRICES[characterId];
 }
 
 /** Enregistre le résultat d'une partie : la récompense, et le record. */
@@ -101,17 +101,17 @@ export function finishRun(state: Progression, faithful: number): Progression {
  * c'est ici que la règle s'applique — un seul endroit à relire pour savoir ce
  * qui est permis.
  */
-export function buyGod(state: Progression, godId: GodId): Progression {
-  if (ownsGod(state, godId)) return state;
-  const price = godPrice(godId);
+export function buyCharacter(state: Progression, characterId: CharacterId): Progression {
+  if (ownsCharacter(state, characterId)) return state;
+  const price = characterPrice(characterId);
   if (state.gold < price) return state;
 
   return {
     ...state,
     gold: state.gold - price,
-    ownedGods: [...state.ownedGods, godId],
-    ownedSkins: [...state.ownedSkins, defaultSkinId(godId)],
-    equippedSkins: { ...state.equippedSkins, [godId]: defaultSkinId(godId) },
+    ownedCharacters: [...state.ownedCharacters, characterId],
+    ownedSkins: [...state.ownedSkins, defaultSkinId(characterId)],
+    equippedSkins: { ...state.equippedSkins, [characterId]: defaultSkinId(characterId) },
   };
 }
 
@@ -126,7 +126,7 @@ export function buySkin(state: Progression, skinId: string): Progression {
   const skin = skinById(skinId);
   if (skin === null) return state;
   if (ownsSkin(state, skinId)) return state;
-  if (!ownsGod(state, skin.godId)) return state;
+  if (!ownsCharacter(state, skin.characterId)) return state;
 
   if (skin.tier === 'commune') {
     if (state.gold < skin.price) return state;
@@ -136,7 +136,7 @@ export function buySkin(state: Progression, skinId: string): Progression {
       ownedSkins: [...state.ownedSkins, skinId],
       // Une parure qu'on vient de payer se porte tout de suite : sans cela,
       // le joueur paie et il ne se passe rien à l'écran.
-      equippedSkins: { ...state.equippedSkins, [skin.godId]: skinId },
+      equippedSkins: { ...state.equippedSkins, [skin.characterId]: skinId },
     };
   }
 
@@ -145,21 +145,21 @@ export function buySkin(state: Progression, skinId: string): Progression {
     ...state,
     laurels: state.laurels - skin.price,
     ownedSkins: [...state.ownedSkins, skinId],
-    equippedSkins: { ...state.equippedSkins, [skin.godId]: skinId },
+    equippedSkins: { ...state.equippedSkins, [skin.characterId]: skinId },
   };
 }
 
 /** Choisit le dieu de la prochaine partie. */
-export function selectGod(state: Progression, godId: GodId): Progression {
-  if (!ownsGod(state, godId)) return state;
-  return { ...state, selectedGod: godId };
+export function selectCharacter(state: Progression, characterId: CharacterId): Progression {
+  if (!ownsCharacter(state, characterId)) return state;
+  return { ...state, selectedCharacter: characterId };
 }
 
 /** Fait porter une parure possédée à son dieu. */
 export function equipSkin(state: Progression, skinId: string): Progression {
   const skin = skinById(skinId);
   if (skin === null || !ownsSkin(state, skinId)) return state;
-  return { ...state, equippedSkins: { ...state.equippedSkins, [skin.godId]: skinId } };
+  return { ...state, equippedSkins: { ...state.equippedSkins, [skin.characterId]: skinId } };
 }
 
 /**
@@ -168,7 +168,7 @@ export function equipSkin(state: Progression, skinId: string): Progression {
  * charger en entier (parure légendaire, tenue différente).
  *
  * ⚠️ L'accent (halo, traînée du cortège) vient TOUJOURS du roster
- * (`GodAppearance.accent`), jamais de la parure — même une légendaire ne le
+ * (`CharacterAppearance.accent`), jamais de la parure — même une légendaire ne le
  * redéfinit pas, c'est une règle de conception, pas un oubli : le type
  * `LegendarySkin` ne porte structurellement pas de champ `accent`.
  */
@@ -183,10 +183,10 @@ export type PlayerAppearance =
  * apparence, il ne saura jamais qu'elle a été payée.
  */
 export function appearanceOf(state: Progression): PlayerAppearance {
-  const godId = state.selectedGod;
-  const accent = GODS[godId].appearance.accent;
-  const equipped = state.equippedSkins[godId];
-  const skin = (equipped !== undefined ? skinById(equipped) : null) ?? skinsOf(godId)[0];
+  const characterId = state.selectedCharacter;
+  const accent = CHARACTERS[characterId].appearance.accent;
+  const equipped = state.equippedSkins[characterId];
+  const skin = (equipped !== undefined ? skinById(equipped) : null) ?? skinsOf(characterId)[0];
 
   if (skin.tier === 'commune') {
     return { kind: 'flat', color: skin.color, accent };
@@ -205,7 +205,7 @@ export function appearanceOf(state: Progression): PlayerAppearance {
 export function flatColorOf(state: Progression): { color: number; accent: number } {
   const appearance = appearanceOf(state);
   if (appearance.kind === 'flat') return appearance;
-  return GODS[state.selectedGod].appearance;
+  return CHARACTERS[state.selectedCharacter].appearance;
 }
 
 /**
@@ -221,28 +221,28 @@ export function sanitize(loaded: Partial<Progression> | null): Progression {
   const fresh = initialProgression();
   if (loaded === null) return fresh;
 
-  const ownedGods = GOD_ORDER.filter(
-    (id) => GODS[id].unlockedFromStart || (loaded.ownedGods ?? []).includes(id),
+  const ownedCharacters = CHARACTER_ORDER.filter(
+    (id) => CHARACTERS[id].unlockedFromStart || (loaded.ownedCharacters ?? []).includes(id),
   );
-  const known = new Set(ownedGods.flatMap((id) => skinsOf(id).map((skin) => skin.id)));
+  const known = new Set(ownedCharacters.flatMap((id) => skinsOf(id).map((skin) => skin.id)));
   const ownedSkins = [
-    ...new Set([...ownedGods.map(defaultSkinId), ...(loaded.ownedSkins ?? []).filter((id) => known.has(id))]),
+    ...new Set([...ownedCharacters.map(defaultSkinId), ...(loaded.ownedSkins ?? []).filter((id) => known.has(id))]),
   ];
 
-  const equippedSkins: Partial<Record<GodId, string>> = {};
-  for (const id of ownedGods) {
+  const equippedSkins: Partial<Record<CharacterId, string>> = {};
+  for (const id of ownedCharacters) {
     const wanted = loaded.equippedSkins?.[id];
     equippedSkins[id] =
       wanted !== undefined && ownedSkins.includes(wanted) ? wanted : defaultSkinId(id);
   }
 
-  const selected = loaded.selectedGod;
+  const selected = loaded.selectedCharacter;
   return {
     gold: Math.max(0, Math.floor(loaded.gold ?? 0)),
     laurels: Math.max(0, Math.floor(loaded.laurels ?? 0)),
-    ownedGods,
+    ownedCharacters,
     ownedSkins,
-    selectedGod: selected !== undefined && ownedGods.includes(selected) ? selected : ownedGods[0],
+    selectedCharacter: selected !== undefined && ownedCharacters.includes(selected) ? selected : ownedCharacters[0],
     equippedSkins,
     bestScore: Math.max(0, Math.floor(loaded.bestScore ?? 0)),
   };

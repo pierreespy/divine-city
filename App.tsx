@@ -33,7 +33,7 @@ import { CONFIG } from './src/config';
 import { Game, type GameStats } from './src/core/Game';
 import { createRenderer } from './src/core/createRenderer';
 import { InputManager } from './src/systems/input/InputManager';
-import { godById } from './src/entities/gods/roster';
+import { characterById } from './src/entities/characters/roster';
 import { flatColorOf } from './src/meta/progression';
 import { useProgression } from './src/meta/useProgression';
 import { Joystick } from './src/ui/Joystick';
@@ -114,7 +114,7 @@ export default function App() {
     const game = gameRef.current;
     if (game === null) return;
     const { color, accent } = flatColorOf(progression.state);
-    game.setGod(godById(progression.state.selectedGod));
+    game.setCharacter(characterById(progression.state.selectedCharacter));
     game.setAppearance(color, accent);
   }, [progression.state]);
 
@@ -221,9 +221,9 @@ export default function App() {
             <MenuScreen
               state={progression.state}
               onPlay={onPlay}
-              onBuyGod={progression.buyGod}
+              onBuyCharacter={progression.buyCharacter}
               onBuySkin={progression.buySkin}
-              onSelectGod={progression.selectGod}
+              onSelectCharacter={progression.selectCharacter}
               onEquipSkin={progression.equipSkin}
               onResetProgression={progression.reset}
               showStats={showStats}

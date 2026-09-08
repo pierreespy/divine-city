@@ -19,13 +19,13 @@ complique le bundling pour un gain nul ici.
 
 | Dossier | Contenu | Convention de nom |
 |---|---|---|
-| `gods/` | Un modèle par dieu, joué en solo (1 seule instance affichée) | `<GodId>.glb` — voir `src/entities/gods/roster.ts` (`hermes.glb`, `zeus.glb`, …) |
+| `characters/` | Un modèle par dieu, joué en solo (1 seule instance affichée) | `<CharacterId>.glb` — voir `src/entities/characters/roster.ts` (`hermes.glb`, `zeus.glb`, …) |
 | `crowd/` | Silhouettes de mortels/cortège, **instanciées par milliers** | `<type>.glb` — un type par silhouette (`citizen.glb`, `hoplite.glb`…) |
 | `city/` | Décor non collidant (statues, ornements) — la ville elle-même reste procédurale (`src/world/City.ts`) | libre, descriptif |
 
 ## Budget (voir le plan d'intégration pour le détail)
 
-- **`gods/`** : le seul mesh « haut détail » du jeu — quelques milliers de
+- **`characters/`** : le seul mesh « haut détail » du jeu — quelques milliers de
   triangles (~3-8k) acceptables, texture 512-1024px.
 - **`crowd/`** : affiché par milliers d'instances simultanées → 200-500
   triangles **maximum** par silhouette, texture unique ou couleurs plates

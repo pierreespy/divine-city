@@ -14,7 +14,7 @@
  */
 
 import type { ImageSourcePropType } from 'react-native';
-import type { GodId } from '../../entities/gods/roster';
+import type { CharacterId } from '../../entities/characters/roster';
 import type { DistrictId } from '../../world/districts';
 
 export const ICONS = {
@@ -108,7 +108,7 @@ export const DISTRICT_ICONS: Partial<Record<DistrictId, ImageSourcePropType>> = 
  * en attendant, mieux vaut un seul portrait vrai que sept pastilles pour un
  * dieu qui, lui, a son visage.
  */
-export const PORTRAITS: Partial<Record<GodId, ImageSourcePropType>> = {
+export const PORTRAITS: Partial<Record<CharacterId, ImageSourcePropType>> = {
   zeus: require('../../../assets/ui/zeus.png') as ImageSourcePropType,
 };
 

@@ -14,7 +14,7 @@
  * un `.glb` générique, et extraire la première géométrie/le premier matériau
  * qu'il contient pour les cas d'instancing (`City.ts`, `Mortals.ts`,
  * `Retinue.ts`). La table qui associe un id à un fichier vit à côté de ses
- * données (`entities/gods/roster.ts`), pas ici.
+ * données (`entities/characters/roster.ts`), pas ici.
  */
 
 import { Asset } from 'expo-asset';

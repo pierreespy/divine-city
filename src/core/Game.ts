@@ -24,7 +24,7 @@ import { PlayerTrail } from '../systems/PlayerTrail';
 import { ViewCulling } from '../systems/ViewCulling';
 import { Profiler, type ProfileSnapshot } from './Profiler';
 import { DISTRICTS } from '../world/districts';
-import { GODS, DEFAULT_GOD_ID, type God } from '../entities/gods/roster';
+import { CHARACTERS, DEFAULT_CHARACTER_ID, type Character } from '../entities/characters/roster';
 
 /**
  * Ce que le jeu sait dire de sa propre performance — lu par l'affichage de
@@ -45,7 +45,7 @@ export interface GameStats {
    */
   triangles: number;
   /** Le dieu joué. Sans écran de sélection (M13), c'est encore le seul moyen de le vérifier. */
-  god: string;
+  character: string;
 }
 
 export class Game {
@@ -76,13 +76,13 @@ export class Game {
    *
    * Tout ce qui dépendra du dieu (son apparence en M14, sa capacité en M19,
    * ses réglages propres) doit passer par ici, et lire une **ligne de
-   * données** (`entities/gods/roster.ts`). Aucun autre fichier n'a à savoir
+   * données** (`entities/characters/roster.ts`). Aucun autre fichier n'a à savoir
    * qu'Hermès existe.
    *
    * S'il n'est pas `readonly`, ce n'est pas un oubli : l'écran de sélection
    * (M13) viendra le changer entre deux parties.
    */
-  private god: God = GODS[DEFAULT_GOD_ID];
+  private character: Character = CHARACTERS[DEFAULT_CHARACTER_ID];
 
   /**
    * Prévenue quand le score change — c'est le seul lien du jeu vers
@@ -169,8 +169,8 @@ export class Game {
    * peuvent venir d'une parure achetée ; mélanger les deux ferait entrer la
    * boutique dans le moteur.
    */
-  setGod(god: God): void {
-    this.god = god;
+  setCharacter(character: Character): void {
+    this.character = character;
   }
 
   /** Les couleurs portées : le corps du dieu, et la teinte de son cortège. */
@@ -223,7 +223,7 @@ export class Game {
     this.profiler.mark('cortège');
 
     // --- Milestone 19 : this.ability.update(deltaTime)    (la capacité divine)
-    //     La capacité à exécuter est `this.god.ability` — le jeu ne saura
+    //     La capacité à exécuter est `this.character.ability` — le jeu ne saura
     //     jamais que c'est la Foudre, seulement que c'est celle du dieu joué.
 
     // 6. Annoncer le score, s'il a changé et pas trop souvent.
@@ -274,7 +274,7 @@ export class Game {
       drawnFollowers: this.retinue.drawnCount,
       followers: this.retinue.size,
       triangles: this.gameScene.renderer.info.render.triangles,
-      god: this.god.label,
+      character: this.character.label,
     };
   }
 
@@ -285,8 +285,8 @@ export class Game {
    * via `getStats()`. C'est la porte d'entrée de l'écran de sélection (M13),
    * de l'apparence (M14) et du bouton de capacité (M19).
    */
-  getGod(): God {
-    return this.god;
+  getCharacter(): Character {
+    return this.character;
   }
 
   /**
