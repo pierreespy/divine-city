@@ -394,46 +394,28 @@ function GlowGradient() {
 }
 
 /**
- * Les trois couches de l'ovale de `GlowOval`, de la plus grande (la plus
- * pâle) à la plus petite (la plus vive) — chacune une fraction de la boîte
- * qui les porte (`boxWidth` × `boxHeight`).
- */
-const GLOW_OVAL_LAYERS = [
-  { widthFrac: 0.92, heightFrac: 1, opacity: 0.12 },
-  { widthFrac: 0.62, heightFrac: 0.72, opacity: 0.24 },
-  { widthFrac: 0.32, heightFrac: 0.48, opacity: 0.42 },
-] as const;
-
-/**
- * L'ombre de la lueur, dans la marge sous la barre : un OVALE, pas un
- * dégradé rectangulaire — trois pilules concentriques (`borderRadius` égal
- * à leur demi-hauteur, donc parfaitement arrondies aux deux bouts), plus
- * pâles et plus larges à mesure qu'on s'éloigne du centre. `boxWidth` et
- * `boxHeight` sont ceux de la boîte qui la porte (une dalle de large, la
- * marge de sécurité de haut) : chaque couche s'y centre elle-même.
+ * L'ombre de la lueur, dans la marge sous la barre : un seul OVALE PLAT,
+ * comme une ombre portée au sol sous la barre — pas un halo dégradé,
+ * pas un empilement de couches. `boxWidth` et `boxHeight` sont ceux de la
+ * boîte qui le porte (une dalle de large, la marge de sécurité de haut) ;
+ * l'ovale y est centré, large et bas (`borderRadius` égal à sa demi-hauteur,
+ * donc parfaitement arrondi aux deux bouts).
  */
 function GlowOval({ boxWidth, boxHeight }: { boxWidth: number; boxHeight: number }) {
+  const width = boxWidth * 0.82;
+  const height = boxHeight * 0.42;
   return (
-    <>
-      {GLOW_OVAL_LAYERS.map((layer) => {
-        const width = boxWidth * layer.widthFrac;
-        const height = boxHeight * layer.heightFrac;
-        return (
-          <View
-            key={layer.widthFrac}
-            style={{
-              position: 'absolute',
-              left: (boxWidth - width) / 2,
-              top: (boxHeight - height) / 2,
-              width,
-              height,
-              borderRadius: height / 2,
-              backgroundColor: `rgba(255, 225, 150, ${layer.opacity})`,
-            }}
-          />
-        );
-      })}
-    </>
+    <View
+      style={{
+        position: 'absolute',
+        left: (boxWidth - width) / 2,
+        top: (boxHeight - height) / 2,
+        width,
+        height,
+        borderRadius: height / 2,
+        backgroundColor: 'rgba(255, 225, 150, 0.5)',
+      }}
+    />
   );
 }
 
