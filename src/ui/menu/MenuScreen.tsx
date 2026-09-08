@@ -296,16 +296,51 @@ export function MenuScreen({
           elle-même. `pointerEvents="none"` : un voile, pas un obstacle au
           doigt. Rien à poser si le téléphone n'a pas cette marge. */}
       {insets.bottom > 0 && (
-        <LinearGradient
-          pointerEvents="none"
-          // Part du bois de la barre d'onglets (`COLORS.bar`) juste sous le
-          // dessin, pour filer vite vers le noir près du bord de l'écran —
-          // pas un flou vers le transparent, un vrai dégradé d'une couleur
-          // à l'autre.
-          colors={[COLORS.bar, 'rgba(0, 0, 0, 1)', 'rgba(0, 0, 0, 1)']}
-          locations={[0, 0.35, 1]}
-          style={[styles.edgeFade, { bottom: 0, height: insets.bottom }]}
-        />
+        <>
+          <LinearGradient
+            pointerEvents="none"
+            // Part du bois de la barre d'onglets (`COLORS.bar`) juste sous le
+            // dessin, pour filer vite vers le noir près du bord de l'écran —
+            // pas un flou vers le transparent, un vrai dégradé d'une couleur
+            // à l'autre.
+            colors={[COLORS.bar, 'rgba(0, 0, 0, 1)', 'rgba(0, 0, 0, 1)']}
+            locations={[0, 0.35, 1]}
+            style={[styles.edgeFade, { bottom: 0, height: insets.bottom }]}
+          />
+
+          {/* L'ombre de la lueur : elle prolonge, juste un peu, la lueur de
+              l'onglet actif dans cette marge — comme si sa chaleur débordait
+              sous la barre avant de se perdre dans le noir. Suit le doigt
+              exactement comme la lueur elle-même (même largeur de dalle,
+              même interpolation de `scrollX`). */}
+          <Animated.View
+            pointerEvents="none"
+            style={[
+              styles.edgeGlow,
+              {
+                bottom: 0,
+                width: pageWidth / TABS.length,
+                height: insets.bottom,
+                transform: [
+                  {
+                    translateX: scrollX.interpolate({
+                      inputRange: [0, (TABS.length - 1) * pageWidth],
+                      outputRange: [0, (TABS.length - 1) * (pageWidth / TABS.length)],
+                      extrapolate: 'clamp',
+                    }),
+                  },
+                ],
+              },
+            ]}
+          >
+            <LinearGradient
+              colors={['rgba(255, 225, 150, 0.35)', 'rgba(255, 225, 150, 0)']}
+              start={{ x: 0.5, y: 0 }}
+              end={{ x: 0.5, y: 1 }}
+              style={StyleSheet.absoluteFill}
+            />
+          </Animated.View>
+        </>
       )}
 
       <SettingsSheet
@@ -630,6 +665,9 @@ const styles = StyleSheet.create({
   backdrop: { position: 'absolute', top: 0, bottom: 0, left: 0, flexDirection: 'row' },
 
   edgeFade: { position: 'absolute', left: 0, right: 0 },
+  // L'ombre de la lueur, dans la marge sous la barre : une dalle de large,
+  // pas l'écran entier — c'est `scrollX` qui la déplace, comme la lueur.
+  edgeGlow: { position: 'absolute', left: 0, overflow: 'hidden' },
 
   // La nef : le ruban et ses pages.
   nave: { flex: 1 },
