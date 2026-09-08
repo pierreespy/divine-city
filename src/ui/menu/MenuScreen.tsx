@@ -401,10 +401,12 @@ function TabBar({
           styles.glow,
           {
             width: cell,
-            height: height * 1.2,
+            // Rallongée d'un rien vers le haut (son bas ne bouge pas) : le
+            // dégradé a plus de hauteur pour s'éteindre avant l'icône.
+            height: height * 1.28,
             // La lueur déborde en bas : son centre tombe aux six dixièmes de
             // la dalle, là où se trouve l'icône du dessin.
-            top: height * 0.05,
+            top: height * -0.03,
             transform: [
               {
                 translateX: scrollX.interpolate({
