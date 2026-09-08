@@ -340,12 +340,42 @@ export function MenuScreen({
  * ailleurs. C'est le même geste que l'ancien trait d'or, dans une autre
  * matière.
  *
- * ⚠️ Elle est UNIFORME, pas dégradée : un simple rectangle d'une seule
- * teinte chaude, semi-transparent (voir `styles.glowFill`) — opaque assez
- * pour se voir, transparent assez pour laisser lire le dessin de la dalle
- * qu'elle recouvre. Elle reste doublée par l'état d'accessibilité
- * (`selected`), qui, lui, ne dépend d'aucune couleur.
+ * ⚠️ Elle est chaude et DIFFUSE, pas plate : une dalle repeinte en jaune
+ * effacerait le dessin qu'elle recouvre, là qu'une lueur le laisse lire.
+ * Elle reste doublée par l'état d'accessibilité (`selected`), qui, lui, ne
+ * dépend d'aucune couleur.
+ *
+ * ⚠️ Le fondu se fait dans LES DEUX SENS, pas juste gauche-droite :
+ * `expo-linear-gradient` ne trace qu'une ligne droite, donc l'effet rond
+ * s'approche en EMPILANT deux dégradés (voir `GlowGradient`) — un
+ * horizontal, un vertical, tous deux transparents à leurs bords et pleins
+ * en leur centre. Superposés, ils s'additionnent : le cœur du rectangle
+ * (où les deux sont pleins) est le plus lumineux, ses quatre bords
+ * s'éteignent, et ses coins — où aucun des deux n'est plein — restent les
+ * plus sombres. Le CADRE, lui, reste le même rectangle qu'avant.
  */
+
+/** La teinte de la lueur, pleine au centre d'un dégradé, éteinte à ses bords. */
+const GLOW_COLORS = ['rgba(255, 225, 150, 0)', 'rgba(255, 225, 150, 0.55)', 'rgba(255, 225, 150, 0)'] as const;
+
+function GlowGradient() {
+  return (
+    <>
+      <LinearGradient
+        colors={GLOW_COLORS}
+        start={{ x: 0, y: 0.5 }}
+        end={{ x: 1, y: 0.5 }}
+        style={StyleSheet.absoluteFill}
+      />
+      <LinearGradient
+        colors={GLOW_COLORS}
+        start={{ x: 0.5, y: 0 }}
+        end={{ x: 0.5, y: 1 }}
+        style={StyleSheet.absoluteFill}
+      />
+    </>
+  );
+}
 
 function TabBar({
   index,
@@ -400,7 +430,7 @@ function TabBar({
           },
         ]}
       >
-        <View style={styles.glowFill} />
+        <GlowGradient />
       </Animated.View>
 
       <Image
@@ -638,9 +668,6 @@ const styles = StyleSheet.create({
   // elle passerait sur le décor au-dessus de la barre.
   tabBar: { overflow: 'hidden' },
   glow: { position: 'absolute', left: 0, overflow: 'hidden' },
-  // Le rectangle plein, une seule teinte : ni dégradé ni disque, juste une
-  // couleur semi-transparente qui remplit tout le cadre de la lueur.
-  glowFill: { flex: 1, backgroundColor: 'rgba(255, 225, 150, 0.4)' },
   tabRow: { flexDirection: 'row', height: '100%' },
   // Une zone cliquable, et rien d'autre : l'icône et l'intitulé sont dans le
   // dessin. Elle ne peint qu'au toucher, pour dire que l'appui a été pris.
