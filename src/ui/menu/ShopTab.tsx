@@ -154,14 +154,18 @@ export function ShopTab({ state, onBuyCharacter, onBuySkin }: Props) {
                   {/* Le cadre ne porte que le dessin et le prix : le dieu et
                       la rareté sur une ligne, le nom de la parure sur la
                       suivante, sous la carte où ils tiennent en entier. */}
-                  <Text style={styles.skinGod} numberOfLines={2}>
+                  {/* Aucun `numberOfLines` sur ces trois lignes : un nom
+                      coupé par des points de suspension ne dit plus ce qu'on
+                      achète. Elles s'écrivent en entier, quitte à passer à
+                      la ligne sous la carte. */}
+                  <Text style={styles.skinGod}>
                     {`${godLabel} - Parure ${RARITY_ADJECTIVE[skin.rarity]}`}
                   </Text>
-                  <Text style={styles.skinName} numberOfLines={2}>
+                  <Text style={styles.skinName}>
                     {skin.label}
                   </Text>
                   {locked && (
-                    <Text style={styles.skinLocked} numberOfLines={1}>
+                    <Text style={styles.skinLocked}>
                       {`Débloque ${godLabel} pour l'acheter`}
                     </Text>
                   )}
@@ -244,9 +248,12 @@ const styles = StyleSheet.create({
   // ne plus se lire.
   skinRail: { gap: SPACE.md, paddingHorizontal: SPACE.sm },
   skinSlot: { width: SKIN_CARD_WIDTH, alignItems: 'center', gap: SPACE.xs },
-  skinGod: { ...TYPE.body, fontSize: 11, color: COLORS.muted, textAlign: 'center' },
-  skinName: { ...TYPE.title, fontSize: 15, color: COLORS.text, textAlign: 'center' },
-  skinLocked: { ...TYPE.body, fontSize: 10, color: COLORS.locked, textAlign: 'center' },
+  // ⚠️ Le Cinzel est une capitale gravée : à taille égale il tient bien
+  // moins de signes qu'une lettre de labeur. « Arès - Parure Olympienne »
+  // règle ces tailles — c'est la plus longue première ligne du catalogue.
+  skinGod: { ...TYPE.body, fontSize: 10, lineHeight: 13, color: COLORS.muted, textAlign: 'center' },
+  skinName: { ...TYPE.title, fontSize: 14, lineHeight: 17, color: COLORS.text, textAlign: 'center' },
+  skinLocked: { ...TYPE.body, fontSize: 10, lineHeight: 13, color: COLORS.locked, textAlign: 'center' },
 
   empty: { ...TYPE.body, color: COLORS.text, textAlign: 'center', lineHeight: 20 },
 
