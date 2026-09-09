@@ -25,7 +25,7 @@
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { CHARACTER_ORDER, characterById, type CharacterId } from '../../entities/characters/roster';
 import { characterPrice, ownsCharacter, ownsSkin, type Progression } from '../../meta/progression';
-import { GOLD_PACKS, LAUREL_PACKS, purchasableSkins, type Skin } from '../../meta/store';
+import { GOLD_PACKS, LAUREL_PACKS, purchasableSkins, RARITY_ADJECTIVE, type Skin } from '../../meta/store';
 import { Button, Card, Coin, GodBadge, Laurel, SectionTitle } from './parts';
 import { SkinCard } from './SkinCard';
 import { COLORS, RADIUS, SPACE, TYPE } from './theme';
@@ -151,15 +151,20 @@ export function ShopTab({ state, onBuyCharacter, onBuySkin }: Props) {
                     onBuy={() => onBuySkin(skin.id)}
                     disabled={locked || state.laurels < skin.price}
                   />
-                  {/* Le cadre ne porte que le dessin et le prix : le dieu
-                      puis le nom de la parure se lisent sous la carte, où
-                      ils ont la place de s'écrire en entier. */}
+                  {/* Le cadre ne porte que le dessin et le prix : le dieu et
+                      la rareté sur une ligne, le nom de la parure sur la
+                      suivante, sous la carte où ils tiennent en entier. */}
                   <Text style={styles.skinGod} numberOfLines={2}>
-                    {locked ? `Débloque ${godLabel}` : godLabel}
+                    {`${godLabel} - Parure ${RARITY_ADJECTIVE[skin.rarity]}`}
                   </Text>
                   <Text style={styles.skinName} numberOfLines={2}>
                     {skin.label}
                   </Text>
+                  {locked && (
+                    <Text style={styles.skinLocked} numberOfLines={1}>
+                      {`Débloque ${godLabel} pour l'acheter`}
+                    </Text>
+                  )}
                 </View>
               );
             })}
@@ -241,6 +246,7 @@ const styles = StyleSheet.create({
   skinSlot: { width: SKIN_CARD_WIDTH, alignItems: 'center', gap: SPACE.xs },
   skinGod: { ...TYPE.body, fontSize: 11, color: COLORS.muted, textAlign: 'center' },
   skinName: { ...TYPE.title, fontSize: 15, color: COLORS.text, textAlign: 'center' },
+  skinLocked: { ...TYPE.body, fontSize: 10, color: COLORS.locked, textAlign: 'center' },
 
   empty: { ...TYPE.body, color: COLORS.text, textAlign: 'center', lineHeight: 20 },
 

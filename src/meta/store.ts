@@ -67,6 +67,22 @@ export const RARITY_LABEL: Readonly<Record<SkinRarity, string>> = {
   olympien: 'Olympien',
 };
 
+/**
+ * La rareté telle qu'elle se lit dans une phrase, accordée avec « parure » :
+ * « Zeus - Parure Olympienne ».
+ *
+ * ⚠️ Distinct de `RARITY_LABEL` à dessein. Celui-ci est un BADGE, affiché
+ * seul et invariable (voir plus haut) ; celui-là est un ADJECTIF, accordé au
+ * féminin de « parure ». Une autre langue peut n'avoir besoin que du
+ * premier — l'accord, lui, ne se refait pas d'une table à l'autre.
+ */
+export const RARITY_ADJECTIVE: Readonly<Record<SkinRarity, string>> = {
+  mortel: 'Mortelle',
+  heros: 'Héroïque',
+  titan: 'Titanesque',
+  olympien: 'Olympienne',
+};
+
 /** La teinte de badge de chaque rareté — gris, bleu, bordeaux, or. */
 export const RARITY_COLOR: Readonly<Record<SkinRarity, number>> = {
   mortel: 0x8b8378,
