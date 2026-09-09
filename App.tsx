@@ -281,7 +281,17 @@ export default function App() {
           </>
         ) : (
           <View style={StyleSheet.absoluteFill}>
+            {/* ⚠️ `key` sur l'état des polices, et c'est tout sauf cosmétique.
+                Le menu est monté PENDANT le chargement, donc avant que le
+                Cinzel soit enregistré : iOS pose alors sa police système sur
+                chaque texte, et n'y revient pas tout seul — d'où un « Niv 1 »,
+                des compteurs et des prix de parure en sans-serif au milieu de
+                titres gravés. Changer la clé remonte le menu une fois, au
+                moment exact où la police devient disponible. C'est la même
+                raison qui fait que l'écran de chargement n'écrit son
+                pourcentage en Cinzel qu'une fois `fontsReady` posé. */}
             <MenuScreen
+              key={fontsLoaded ? 'polices-pretes' : 'polices-en-cours'}
               state={progression.state}
               onPlay={onPlay}
               onBuyCharacter={progression.buyCharacter}
