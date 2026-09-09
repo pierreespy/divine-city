@@ -12,6 +12,7 @@
 
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { FONTS } from './menu/theme';
 
 interface Props {
   /** Le nombre de fidèles du cortège. */
@@ -126,8 +127,11 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     backgroundColor: 'rgba(0, 0, 0, 0.45)',
   },
-  scoreValue: { color: '#fff', fontSize: 30, fontWeight: '800' },
-  scoreLabel: { color: 'rgba(255, 255, 255, 0.7)', fontSize: 13, fontWeight: '600' },
+  // ⚠️ Le HUD porte la MÊME police que le menu (`FONTS`, une seule famille
+  // pour toute l'application) : jamais de `fontWeight`, qui ferait retomber
+  // Android sur la police système.
+  scoreValue: { color: '#fff', fontSize: 30, fontFamily: FONTS.titleBold },
+  scoreLabel: { color: 'rgba(255, 255, 255, 0.7)', fontSize: 13, fontFamily: FONTS.titleBold },
 
   topButtons: { flexDirection: 'row', alignItems: 'center', gap: 8 },
 
@@ -139,7 +143,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: 'rgba(0, 0, 0, 0.45)',
   },
-  quitLabel: { color: '#fff', fontSize: 14, fontWeight: '700' },
+  quitLabel: { color: '#fff', fontSize: 14, fontFamily: FONTS.titleBold },
 
   restart: {
     width: 44, // 44 points : la taille minimale confortable pour un pouce.
@@ -178,7 +182,7 @@ const styles = StyleSheet.create({
   districtText: {
     color: 'rgba(255, 255, 255, 0.92)',
     fontSize: 13,
-    fontWeight: '700',
+    fontFamily: FONTS.titleBold,
     letterSpacing: 1.1,
     textTransform: 'uppercase',
   },

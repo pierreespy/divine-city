@@ -25,6 +25,7 @@
 
 import { StyleSheet, Text, View } from 'react-native';
 import type { GameStats } from '../core/Game';
+import { FONTS } from './menu/theme';
 
 interface Props {
   stats: GameStats | null;
@@ -92,11 +93,11 @@ const styles = StyleSheet.create({
     minWidth: 148,
   },
   row: { flexDirection: 'row', justifyContent: 'space-between', gap: 12 },
-  label: { color: 'rgba(255, 255, 255, 0.75)', fontSize: 12 },
+  label: { color: 'rgba(255, 255, 255, 0.75)', fontSize: 12, fontFamily: FONTS.titleBold },
   // `textAlign: right` plutôt qu'une police à chasse fixe : les chiffres
   // restent alignés sans dépendre des polices installées sur l'appareil.
-  value: { color: '#fff', fontSize: 12, textAlign: 'right' },
-  strong: { color: '#7dd3fc', fontWeight: '700' },
+  value: { color: '#fff', fontSize: 12, textAlign: 'right', fontFamily: FONTS.titleBold },
+  strong: { color: '#7dd3fc' },
   dim: { color: 'rgba(255, 255, 255, 0.55)' },
   separator: {
     height: 1,

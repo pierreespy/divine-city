@@ -98,7 +98,6 @@ const styles = StyleSheet.create({
     right: 0,
     left: 0,
     color: '#f7d982',
-    fontWeight: '700',
     letterSpacing: 1,
     textAlign: 'center',
     textShadowColor: '#4a220b',

@@ -22,12 +22,7 @@ import { StatusBar } from 'expo-status-bar';
 import { GLView, type ExpoWebGLRenderingContext } from 'expo-gl';
 import { useFonts } from 'expo-font';
 import * as SplashScreen from 'expo-splash-screen';
-import { Cinzel_600SemiBold, Cinzel_700Bold } from '@expo-google-fonts/cinzel';
-import {
-  Spectral_400Regular,
-  Spectral_500Medium,
-  Spectral_600SemiBold,
-} from '@expo-google-fonts/spectral';
+import { Cinzel_700Bold } from '@expo-google-fonts/cinzel';
 import { PixelRatio } from 'react-native';
 
 import { CONFIG } from './src/config';
@@ -65,13 +60,10 @@ export default function App() {
    * iOS. Rien ne se dessine tant qu'elles ne sont pas prêtes — sinon le
    * titre du menu changerait de tracé sous les yeux du joueur.
    */
-  const [fontsLoaded, fontError] = useFonts({
-    Cinzel_600SemiBold,
-    Cinzel_700Bold,
-    Spectral_400Regular,
-    Spectral_500Medium,
-    Spectral_600SemiBold,
-  });
+  // ⚠️ Une seule police dans toute l'application (voir `FONTS` dans
+  // `src/ui/menu/theme.ts`) : le Cinzel Bold gravé. En charger une seconde
+  // ici rouvrirait la porte à un second tracé à l'écran.
+  const [fontsLoaded, fontError] = useFonts({ Cinzel_700Bold });
   const loadingStartedAt = useRef<number | null>(null);
   const loadingProgress = useRef(new Animated.Value(0)).current;
   const [loadingImageReady, setLoadingImageReady] = useState(false);

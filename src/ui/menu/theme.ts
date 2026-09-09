@@ -146,31 +146,37 @@ export const TEXT_SHADOW = {
 } as const;
 
 /**
- * Les deux polices du menu, et rien d'autre.
+ * LA police du jeu — une seule, décidée le 2026-09-09.
  *
- * Le **Cinzel** est dessiné d'après les capitales gravées dans la pierre
- * antique : c'est la lettre du fronton du temple, celle qui donne son nom au
- * jeu, aux dieux, aux prix. Il ne sait pas faire un paragraphe — ses
- * capitales larges fatiguent dès la deuxième ligne — d'où le **Spectral**
- * pour tout ce qui se lit vraiment.
+ * Le **Cinzel Bold** est dessiné d'après les capitales gravées dans la
+ * pierre antique : c'est la lettre du fronton du temple, celle qui donne son
+ * nom au jeu, aux dieux, aux prix. Le Spectral, qui servait au texte
+ * courant, a été retiré : deux polices faisaient deux jeux à l'écran.
+ *
+ * ⚠️ Les cinq entrées ci-dessous pointent DÉLIBÉRÉMENT sur la même famille.
+ * Elles restent distinctes pour que les styles continuent de dire ce qu'ils
+ * expriment (un titre, un corps de texte, un prix) — pas pour ouvrir la
+ * porte à une seconde police. N'en fais pas diverger une.
  *
  * ⚠️ Chaque graisse est une police SÉPARÉE, avec son propre nom. C'est ainsi
  * que fonctionnent les polices chargées à la main : `fontWeight` n'a plus
  * aucun effet une fois `fontFamily` posé, et le préciser quand même fait
  * retomber Android sur la police système. Les styles de ce dossier ne
- * doivent donc JAMAIS porter de `fontWeight` — on change de famille.
+ * doivent donc JAMAIS porter de `fontWeight`.
  *
- * ⚠️ Elles sont chargées au démarrage par App.tsx. Ajouter une graisse ici
- * sans l'y déclarer donne un texte invisible sur iOS.
+ * ⚠️ Elle est chargée au démarrage par App.tsx. Aucun texte de l'application
+ * ne doit poser sa `fontFamily` à la main : tout passe par `TYPE`.
  */
+const CINZEL = 'Cinzel_700Bold';
+
 export const FONTS = {
   /** La pierre gravée : titres, intitulés, prix. */
-  titleBold: 'Cinzel_700Bold',
-  titleSemi: 'Cinzel_600SemiBold',
-  /** L'encre : tout ce qui se lit en lignes. */
-  body: 'Spectral_400Regular',
-  bodyMedium: 'Spectral_500Medium',
-  bodySemi: 'Spectral_600SemiBold',
+  titleBold: CINZEL,
+  titleSemi: CINZEL,
+  /** L'encre : tout ce qui se lit en lignes. La même pierre. */
+  body: CINZEL,
+  bodyMedium: CINZEL,
+  bodySemi: CINZEL,
 } as const;
 
 export const TYPE = {
