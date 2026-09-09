@@ -24,8 +24,19 @@
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#12141c",
-          "resizeMode": "contain"
+          "backgroundColor": "#77b9e5",
+          "ios": {
+            "image": "./assets/chargement.jpg",
+            "imageWidth": 688,
+            "resizeMode": "cover",
+            "enableFullScreenImage_legacy": true
+          },
+          "android": {
+            "image": "./assets/ui/laurier.png",
+            "imageWidth": 120,
+            "backgroundColor": "#77b9e5",
+            "resizeMode": "contain"
+          }
         }
       ],
       "expo-asset"

@@ -16,11 +16,12 @@
  */
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { StyleSheet, View, useWindowDimensions } from 'react-native';
+import { Animated, StyleSheet, View, useWindowDimensions } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { GLView, type ExpoWebGLRenderingContext } from 'expo-gl';
 import { useFonts } from 'expo-font';
+import * as SplashScreen from 'expo-splash-screen';
 import { Cinzel_600SemiBold, Cinzel_700Bold } from '@expo-google-fonts/cinzel';
 import {
   Spectral_400Regular,
@@ -40,6 +41,16 @@ import { Joystick } from './src/ui/Joystick';
 import { Hud } from './src/ui/Hud';
 import { Stats } from './src/ui/Stats';
 import { MenuScreen } from './src/ui/menu/MenuScreen';
+import { LoadingScreen } from './src/ui/loading/LoadingScreen';
+import {
+  MINIMUM_LOADING_DURATION_MS,
+  canLeaveLoadingScreen,
+  getLoadingPercentage,
+  getLoadingProgress,
+} from './src/ui/loading/loadingState';
+
+// Empêche le splash natif de disparaître avant que notre écran illustré soit prêt.
+void SplashScreen.preventAutoHideAsync();
 
 export default function App() {
   const gameRef = useRef<Game | null>(null);
@@ -53,14 +64,52 @@ export default function App() {
    * iOS. Rien ne se dessine tant qu'elles ne sont pas prêtes — sinon le
    * titre du menu changerait de tracé sous les yeux du joueur.
    */
-  const [fontsLoaded] = useFonts({
+  const [fontsLoaded, fontError] = useFonts({
     Cinzel_600SemiBold,
     Cinzel_700Bold,
     Spectral_400Regular,
     Spectral_500Medium,
     Spectral_600SemiBold,
   });
+  const loadingStartedAt = useRef<number | null>(null);
+  const loadingProgress = useRef(new Animated.Value(0)).current;
+  const [loadingImageReady, setLoadingImageReady] = useState(false);
+  const [minimumLoadingElapsed, setMinimumLoadingElapsed] = useState(false);
+  const [loadingPercentage, setLoadingPercentage] = useState(0);
   const { width, height } = useWindowDimensions();
+
+  const onLoadingImageReady = useCallback(() => {
+    if (loadingStartedAt.current !== null) return;
+    loadingStartedAt.current = Date.now();
+    setLoadingImageReady(true);
+    void SplashScreen.hideAsync();
+  }, []);
+
+  useEffect(() => {
+    if (!loadingImageReady) return;
+    let frame = 0;
+    const startedAt = loadingStartedAt.current ?? Date.now();
+
+    const updateProgress = () => {
+      const elapsedMs = Date.now() - startedAt;
+      const progress = getLoadingProgress(elapsedMs);
+      loadingProgress.setValue(progress);
+      setLoadingPercentage(getLoadingPercentage(elapsedMs));
+
+      if (progress < 1) {
+        frame = requestAnimationFrame(updateProgress);
+      } else {
+        setMinimumLoadingElapsed(true);
+      }
+    };
+
+    frame = requestAnimationFrame(updateProgress);
+    return () => cancelAnimationFrame(frame);
+  }, [loadingImageReady, loadingProgress]);
+
+  useEffect(() => {
+    if (fontError) console.warn('Impossible de charger les polices du menu', fontError);
+  }, [fontError]);
 
   /** Ce que le joueur regarde. Le jeu tourne uniquement en `partie`. */
   const [screen, setScreen] = useState<'menu' | 'partie'>('menu');
@@ -177,9 +226,21 @@ export default function App() {
     [input],
   );
 
-  // Un fond nu, le temps du chargement : c'est la couleur du décor du jeu,
-  // donc l'écran ne clignote pas quand le menu arrive.
-  if (!fontsLoaded) return <View style={styles.root} />;
+  if (
+    !canLeaveLoadingScreen(
+      minimumLoadingElapsed ? MINIMUM_LOADING_DURATION_MS : 0,
+      fontsLoaded || fontError !== null,
+    )
+  ) {
+    return (
+      <LoadingScreen
+        progress={loadingProgress}
+        percentage={loadingPercentage}
+        fontsReady={fontsLoaded}
+        onReady={onLoadingImageReady}
+      />
+    );
+  }
 
   return (
     <SafeAreaProvider>
