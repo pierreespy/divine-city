@@ -46,7 +46,17 @@ export function getLoadingPercentage(elapsedMs: number): number {
   return Math.floor(getLoadingProgress(elapsedMs) * 100);
 }
 
-/** Le menu ne peut apparaître qu'après l'animation et le chargement des polices. */
-export function canLeaveLoadingScreen(elapsedMs: number, fontsLoaded: boolean): boolean {
-  return elapsedMs >= MINIMUM_LOADING_DURATION_MS && fontsLoaded;
+/** Le menu ne peut apparaître qu'une fois entièrement préparé derrière l'illustration. */
+export function canLeaveLoadingScreen(
+  elapsedMs: number,
+  fontsLoaded: boolean,
+  assetsLoaded: boolean,
+  menuRendered: boolean,
+): boolean {
+  return (
+    elapsedMs >= MINIMUM_LOADING_DURATION_MS &&
+    fontsLoaded &&
+    assetsLoaded &&
+    menuRendered
+  );
 }

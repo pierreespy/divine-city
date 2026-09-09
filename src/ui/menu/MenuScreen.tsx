@@ -64,12 +64,9 @@ import { SettingsSheet } from './SettingsSheet';
 import { ShopTab } from './ShopTab';
 import { TopBar } from './TopBar';
 import { COLORS, SPACE, TYPE } from './theme';
+import { MENU_WALLPAPERS } from './menuAssets';
 
 export type MenuTab = 'olympe' | 'quetes' | 'play' | 'pass' | 'shop';
-
-/** Le décor de « Jouer », et celui, partagé, de tous les autres onglets. */
-const WALLPAPER_PLAY = require('../../../assets/wallpaper1.png');
-const WALLPAPER_OTHER = require('../../../assets/wallpaper2.png');
 
 /**
  * Le temple dessiné qui encadre une page — ciel, fronton, colonnes et socle
@@ -146,6 +143,7 @@ interface Props {
   onResetProgression: () => void;
   showStats: boolean;
   onToggleStats: (value: boolean) => void;
+  onReady: () => void;
 }
 
 export function MenuScreen({
@@ -158,6 +156,7 @@ export function MenuScreen({
   onResetProgression,
   showStats,
   onToggleStats,
+  onReady,
 }: Props) {
   const { width } = useWindowDimensions();
   const pageWidth = Math.max(1, Math.round(width));
@@ -172,6 +171,8 @@ export function MenuScreen({
   // marges hautes et basses se comptent donc sur la hauteur, pas la largeur
   // (les pourcentages de Yoga, eux, se mesurent tous sur la largeur).
   const [naveHeight, setNaveHeight] = useState(0);
+  const [pagerReady, setPagerReady] = useState(false);
+  const readyReported = useRef(false);
 
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [confirmingReset, setConfirmingReset] = useState(false);
@@ -203,6 +204,17 @@ export function MenuScreen({
     scrollX.setValue(indexRef.current * pageWidth);
     pagerRef.current?.scrollTo({ x: indexRef.current * pageWidth, y: 0, animated: false });
   }, [pageWidth, scrollX]);
+
+  // Le signal part après une image complète avec la hauteur de la nef et le
+  // ruban déjà recadré sur « Jouer ». L'écran illustré reste au-dessus jusque-là.
+  useEffect(() => {
+    if (naveHeight <= 0 || !pagerReady || readyReported.current) return;
+    const frame = requestAnimationFrame(() => {
+      readyReported.current = true;
+      onReady();
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [naveHeight, onReady, pagerReady]);
 
   const onScroll = Animated.event([{ nativeEvent: { contentOffset: { x: scrollX } } }], {
     useNativeDriver: true,
@@ -253,9 +265,11 @@ export function MenuScreen({
             scrollEventThrottle={16}
             onScroll={onScroll}
             onContentSizeChange={() => {
-              if (placed.current) return;
-              placed.current = true;
-              pagerRef.current?.scrollTo({ x: indexOf('play') * pageWidth, y: 0, animated: false });
+              if (!placed.current) {
+                placed.current = true;
+                pagerRef.current?.scrollTo({ x: indexOf('play') * pageWidth, y: 0, animated: false });
+              }
+              setPagerReady(true);
             }}
           >
             <Backdrop pageWidth={pageWidth} />
@@ -539,7 +553,7 @@ function Backdrop({ pageWidth }: { pageWidth: number }) {
       {TABS.map((tab) => (
         <Image
           key={tab.id}
-          source={tab.id === 'play' ? WALLPAPER_PLAY : WALLPAPER_OTHER}
+          source={tab.id === 'play' ? MENU_WALLPAPERS.play : MENU_WALLPAPERS.other}
           style={{ width: pageWidth, height: '100%' }}
           resizeMode="cover"
         />

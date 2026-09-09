@@ -41,6 +41,7 @@ import { Joystick } from './src/ui/Joystick';
 import { Hud } from './src/ui/Hud';
 import { Stats } from './src/ui/Stats';
 import { MenuScreen } from './src/ui/menu/MenuScreen';
+import { loadMenuAssets } from './src/ui/menu/menuAssets';
 import { LoadingScreen } from './src/ui/loading/LoadingScreen';
 import {
   MINIMUM_LOADING_DURATION_MS,
@@ -76,7 +77,11 @@ export default function App() {
   const [loadingImageReady, setLoadingImageReady] = useState(false);
   const [minimumLoadingElapsed, setMinimumLoadingElapsed] = useState(false);
   const [loadingPercentage, setLoadingPercentage] = useState(0);
+  const [menuAssetsReady, setMenuAssetsReady] = useState(false);
+  const [menuReady, setMenuReady] = useState(false);
   const { width, height } = useWindowDimensions();
+
+  const onMenuReady = useCallback(() => setMenuReady(true), []);
 
   const onLoadingImageReady = useCallback(() => {
     if (loadingStartedAt.current !== null) return;
@@ -110,6 +115,20 @@ export default function App() {
   useEffect(() => {
     if (fontError) console.warn('Impossible de charger les polices du menu', fontError);
   }, [fontError]);
+
+  useEffect(() => {
+    let active = true;
+    loadMenuAssets()
+      .catch((error: unknown) => {
+        console.warn('Impossible de précharger toutes les images du menu', error);
+      })
+      .finally(() => {
+        if (active) setMenuAssetsReady(true);
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
 
   /** Ce que le joueur regarde. Le jeu tourne uniquement en `partie`. */
   const [screen, setScreen] = useState<'menu' | 'partie'>('menu');
@@ -226,21 +245,12 @@ export default function App() {
     [input],
   );
 
-  if (
-    !canLeaveLoadingScreen(
-      minimumLoadingElapsed ? MINIMUM_LOADING_DURATION_MS : 0,
-      fontsLoaded || fontError !== null,
-    )
-  ) {
-    return (
-      <LoadingScreen
-        progress={loadingProgress}
-        percentage={loadingPercentage}
-        fontsReady={fontsLoaded}
-        onReady={onLoadingImageReady}
-      />
-    );
-  }
+  const showLoadingScreen = !canLeaveLoadingScreen(
+    minimumLoadingElapsed ? MINIMUM_LOADING_DURATION_MS : 0,
+    fontsLoaded || fontError !== null,
+    menuAssetsReady,
+    menuReady,
+  );
 
   return (
     <SafeAreaProvider>
@@ -289,8 +299,18 @@ export default function App() {
               onResetProgression={progression.reset}
               showStats={showStats}
               onToggleStats={setShowStats}
+              onReady={onMenuReady}
             />
           </View>
+        )}
+
+        {showLoadingScreen && (
+          <LoadingScreen
+            progress={loadingProgress}
+            percentage={loadingPercentage}
+            fontsReady={fontsLoaded}
+            onReady={onLoadingImageReady}
+          />
         )}
       </View>
     </SafeAreaProvider>

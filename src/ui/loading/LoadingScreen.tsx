@@ -77,6 +77,8 @@ const styles = StyleSheet.create({
     left: 0,
     backgroundColor: '#77b9e5',
     overflow: 'hidden',
+    zIndex: 100,
+    elevation: 100,
   },
   artwork: {
     position: 'absolute',

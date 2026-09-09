@@ -28,12 +28,14 @@ test('la progression accélère exponentiellement et finit en deux secondes', as
   assert.equal(getLoadingPercentage(2_000), 100);
 });
 
-test("l'application attend deux secondes et les polices", async () => {
+test("l'application attend deux secondes, les polices, les ressources et le premier rendu du menu", async () => {
   const { canLeaveLoadingScreen } = await loadSubject();
 
-  assert.equal(canLeaveLoadingScreen(1_999, true), false);
-  assert.equal(canLeaveLoadingScreen(2_000, false), false);
-  assert.equal(canLeaveLoadingScreen(2_000, true), true);
+  assert.equal(canLeaveLoadingScreen(1_999, true, true, true), false);
+  assert.equal(canLeaveLoadingScreen(2_000, false, true, true), false);
+  assert.equal(canLeaveLoadingScreen(2_000, true, false, true), false);
+  assert.equal(canLeaveLoadingScreen(2_000, true, true, false), false);
+  assert.equal(canLeaveLoadingScreen(2_000, true, true, true), true);
 });
 
 test("l'illustration couvre un téléphone et reste entière en paysage", async () => {
