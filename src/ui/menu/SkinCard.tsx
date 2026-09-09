@@ -16,7 +16,7 @@
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import type { Skin } from '../../meta/store';
 import { RARITY_FRAMES } from './icons';
-import { COLORS, FONTS, RADIUS } from './theme';
+import { COLORS, RADIUS, TYPE } from './theme';
 
 /** Un texte gravé, clair et cerclé de sombre : lisible sur les quatre fonds de cadre, de l'or clair au bordeaux. */
 const engraved = {
@@ -88,7 +88,7 @@ export function SkinCard({
       )}
 
       <View style={[styles.nameBand, NAME_BAND]}>
-        <Text style={styles.name} numberOfLines={2} adjustsFontSizeToFit>
+        <Text style={styles.name} numberOfLines={2}>
           {skin.label}
         </Text>
       </View>
@@ -120,10 +120,14 @@ const styles = StyleSheet.create({
   art: { width: '100%', height: '100%' },
 
   nameBand: { position: 'absolute', alignItems: 'center', justifyContent: 'center' },
+  // ⚠️ Le nom et le prix ci-dessous passent par les jetons du thème, comme
+  // « CONVERSION » ou le « 1 000 » de la conversion : la carte n'a pas de
+  // police à elle. Et pas d'`adjustsFontSizeToFit` : sa réduction fait
+  // retomber le texte sur la police système, et la gravure disparaît.
   name: {
-    fontFamily: FONTS.titleBold,
-    fontSize: 18,
-    lineHeight: 20,
+    ...TYPE.price,
+    fontSize: 17,
+    lineHeight: 19,
     letterSpacing: 0.3,
     textAlign: 'center',
     ...engraved,
@@ -134,9 +138,7 @@ const styles = StyleSheet.create({
   // suivre le texte gravé clair du nom.
   priceSpot: { position: 'absolute', flexDirection: 'row', alignItems: 'center', borderRadius: RADIUS.sm },
   pricePressed: { opacity: 0.6 },
-  // ⚠️ Une taille FIXE, calée sur le plus long prix du catalogue (« 1 200 »).
-  // Pas d'`adjustsFontSizeToFit` ici : il fait retomber le Cinzel sur la
-  // police système dès qu'il doit réduire, et le prix cesse d'être gravé.
-  price: { fontFamily: FONTS.titleBold, flex: 1, fontSize: 22, textAlign: 'center', color: COLORS.onGold },
+  // Taille FIXE, calée sur le plus long prix du catalogue (« 1 200 »).
+  price: { ...TYPE.price, flex: 1, fontSize: 22, textAlign: 'center', color: COLORS.onGold },
   priceDisabled: { color: COLORS.muted },
 });
