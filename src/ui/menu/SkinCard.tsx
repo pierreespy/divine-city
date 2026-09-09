@@ -37,8 +37,31 @@ const FRAME_ASPECT: Readonly<Record<Skin['rarity'], number>> = {
 /** Le panneau qui reçoit l'illustration, en fractions de la carte. */
 const ART_BOX = { left: '14.4%', right: '14.7%', top: '3%', bottom: '38%' } as const;
 
-/** La bande du nom, entre le bas de l'illustration et la plaque à lauriers. */
-const NAME_BAND = { left: '10%', right: '10%', top: '63.5%', height: '13%' } as const;
+/**
+ * La bande du nom, entre le bas de l'illustration et la plaque à lauriers.
+ *
+ * Elle descend jusqu'à la plaque : un nom de plusieurs mots s'écrit sur
+ * plusieurs lignes (voir `lines()`), il lui faut la hauteur pour les poser.
+ */
+const NAME_BAND = { left: '8%', right: '8%', top: '62.5%', height: '16%' } as const;
+
+/** Au-delà, le nom ne tiendrait plus dans la bande. */
+const MAX_NAME_LINES = 3;
+
+/**
+ * Un mot par ligne.
+ *
+ * ⚠️ Ce n'est PAS le retour à la ligne automatique : « Roi des Abysses »
+ * tiendrait sur deux lignes coupées n'importe où, alors qu'un nom de parure
+ * se lit comme un titre gravé — chaque mot sur sa ligne, centré. Au-delà de
+ * trois mots, les derniers restent ensemble sur la dernière ligne plutôt que
+ * de déborder sous la plaque.
+ */
+function lines(label: string): string {
+  const words = label.split(' ');
+  if (words.length <= MAX_NAME_LINES) return words.join('\n');
+  return [...words.slice(0, MAX_NAME_LINES - 1), words.slice(MAX_NAME_LINES - 1).join(' ')].join('\n');
+}
 
 /**
  * Le prix, posé juste après la couronne déjà gravée dans la plaque.
@@ -88,8 +111,8 @@ export function SkinCard({
       )}
 
       <View style={[styles.nameBand, NAME_BAND]}>
-        <Text style={styles.name} numberOfLines={2}>
-          {skin.label}
+        <Text style={styles.name} numberOfLines={MAX_NAME_LINES}>
+          {lines(skin.label)}
         </Text>
       </View>
 
@@ -126,8 +149,8 @@ const styles = StyleSheet.create({
   // retomber le texte sur la police système, et la gravure disparaît.
   name: {
     ...TYPE.price,
-    fontSize: 17,
-    lineHeight: 19,
+    fontSize: 15,
+    lineHeight: 17,
     letterSpacing: 0.3,
     textAlign: 'center',
     ...engraved,

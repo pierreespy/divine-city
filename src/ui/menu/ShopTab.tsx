@@ -151,7 +151,7 @@ export function ShopTab({ state, onBuyCharacter, onBuySkin }: Props) {
                     onBuy={() => onBuySkin(skin.id)}
                     disabled={locked || state.laurels < skin.price}
                   />
-                  <Text style={styles.skinGod} numberOfLines={1}>
+                  <Text style={styles.skinGod} numberOfLines={2}>
                     {locked ? `Débloque ${godLabel}` : godLabel}
                   </Text>
                 </View>

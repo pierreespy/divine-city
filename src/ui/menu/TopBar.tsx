@@ -76,7 +76,11 @@ const SLOTS = {
 const PORTRAIT = { x: 0.1076, y: 0.0839, size: 0.12 };
 
 /** Les tailles de texte du bandeau, elles aussi en fractions de la largeur. */
-const TEXT = { name: 25 / 768, purse: 24 / 768, level: 16 / 768 };
+// ⚠️ En fractions de la LARGEUR du bandeau, pas en points : le dessin du
+// bandeau s'étire avec l'écran, ses textes doivent suivre. Le nom du dieu et
+// la plaque de niveau sont volontairement plus discrets que les deux
+// bourses — ce sont des repères, pas des montants qu'on surveille.
+const TEXT = { name: 20 / 768, purse: 24 / 768, level: 12 / 768 };
 
 /** La place du bouton des réglages, que le dessin ne prévoit pas. */
 const GEAR = 34;
