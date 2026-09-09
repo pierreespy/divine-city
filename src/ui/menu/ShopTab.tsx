@@ -47,9 +47,11 @@ interface Props {
 
 export function ShopTab({ state, onBuyCharacter, onBuySkin }: Props) {
   const characters = CHARACTER_ORDER.filter((id) => !ownsCharacter(state, id));
+  // ⚠️ La vitrine montre TOUJOURS ses trois pièces, même celles d'un dieu que
+  // le joueur n'a pas encore : une vitrine à une seule carte n'est plus une
+  // vitrine. Seule une parure DÉJÀ possédée disparaît (règle du rayon).
   const skins = FEATURED_SKIN_IDS.map((id) => skinById(id)).filter(
-    (skin): skin is NonNullable<typeof skin> =>
-      skin !== null && ownsCharacter(state, skin.characterId) && !ownsSkin(state, skin.id),
+    (skin): skin is NonNullable<typeof skin> => skin !== null && !ownsSkin(state, skin.id),
   );
   const featured = GOLD_PACKS.find((pack) => pack.featured) ?? GOLD_PACKS[0];
 
@@ -131,33 +133,23 @@ export function ShopTab({ state, onBuyCharacter, onBuySkin }: Props) {
             nestedScrollEnabled
           >
             {skins.map((skin) => {
-              const cannotAfford = state.laurels < skin.price;
+              // Une parure ne s'achète que si son dieu est déjà au panthéon
+              // (`buySkin`) : la carte le dit, plutôt que de rester muette
+              // sous le doigt.
+              const locked = !ownsCharacter(state, skin.characterId);
+              const godLabel = characterById(skin.characterId).label;
               return (
                 <View key={skin.id} style={styles.skinSlot}>
                   <SkinCard
+                    testID={`buy-${skin.id}`}
                     skin={skin}
                     width={SKIN_CARD_WIDTH}
                     onBuy={() => onBuySkin(skin.id)}
-                    disabled={cannotAfford}
+                    disabled={locked || state.laurels < skin.price}
                   />
                   <Text style={styles.skinGod} numberOfLines={1}>
-                    {characterById(skin.characterId).label}
+                    {locked ? `Débloque ${godLabel}` : godLabel}
                   </Text>
-                  <Button
-                    testID={`buy-${skin.id}`}
-                    label="Acheter"
-                    variant="primary"
-                    disabled={cannotAfford}
-                    price={
-                      <>
-                        <Laurel size={14} />
-                        <Text style={styles.skinPrice}>{skin.price.toLocaleString('fr-FR')}</Text>
-                      </>
-                    }
-                    onPress={() => onBuySkin(skin.id)}
-                    hint={`Acheter la parure ${skin.label}`}
-                    style={styles.skinButton}
-                  />
                 </View>
               );
             })}
@@ -238,8 +230,6 @@ const styles = StyleSheet.create({
   skinRail: { gap: SPACE.md, paddingHorizontal: SPACE.sm },
   skinSlot: { width: SKIN_CARD_WIDTH, alignItems: 'center', gap: SPACE.xs },
   skinGod: { ...TYPE.body, fontSize: 11, color: COLORS.muted },
-  skinButton: { alignSelf: 'stretch', minHeight: 34 },
-  skinPrice: { ...TYPE.price, fontSize: 13, color: COLORS.onGold },
 
   empty: { ...TYPE.body, color: COLORS.text, textAlign: 'center', lineHeight: 20 },
 

@@ -16,7 +16,7 @@
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import type { Skin } from '../../meta/store';
 import { RARITY_FRAMES } from './icons';
-import { COLORS, FONTS, RADIUS } from './theme';
+import { COLORS, RADIUS, TYPE } from './theme';
 
 /** Un texte gravé, clair et cerclé de sombre : lisible sur les quatre fonds de cadre, de l'or clair au bordeaux. */
 const engraved = {
@@ -48,9 +48,11 @@ export function SkinCard({
   width,
   onBuy,
   disabled,
+  testID,
 }: {
   skin: Skin;
   width: number;
+  testID?: string;
   /** Appelé quand le joueur touche le prix, sur la plaque du cadre. */
   onBuy?: () => void;
   disabled?: boolean;
@@ -91,6 +93,7 @@ export function SkinCard({
       <Pressable
         onPress={onBuy}
         disabled={disabled || onBuy === undefined}
+        testID={testID}
         accessibilityRole="button"
         accessibilityLabel={`Acheter la parure ${skin.label}`}
         accessibilityState={{ disabled: disabled ?? false }}
@@ -113,7 +116,7 @@ const styles = StyleSheet.create({
 
   nameBand: { position: 'absolute', alignItems: 'center', justifyContent: 'center' },
   name: {
-    fontFamily: FONTS.titleBold,
+    ...TYPE.title,
     fontSize: 18,
     lineHeight: 20,
     letterSpacing: 0.3,
@@ -126,6 +129,6 @@ const styles = StyleSheet.create({
   // suivre le texte gravé clair du nom.
   priceSpot: { position: 'absolute', flexDirection: 'row', alignItems: 'center', borderRadius: RADIUS.sm },
   pricePressed: { opacity: 0.6 },
-  price: { fontFamily: FONTS.titleBold, fontSize: 26, color: COLORS.onGold },
+  price: { ...TYPE.price, fontSize: 26, color: COLORS.onGold },
   priceDisabled: { color: COLORS.muted },
 });
