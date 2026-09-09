@@ -16,7 +16,7 @@
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import type { Skin } from '../../meta/store';
 import { RARITY_FRAMES } from './icons';
-import { COLORS, RADIUS, TYPE } from './theme';
+import { COLORS, FONTS, RADIUS } from './theme';
 
 /** Un texte gravé, clair et cerclé de sombre : lisible sur les quatre fonds de cadre, de l'or clair au bordeaux. */
 const engraved = {
@@ -126,7 +126,7 @@ const styles = StyleSheet.create({
 
   nameBand: { position: 'absolute', alignItems: 'center', justifyContent: 'center' },
   name: {
-    ...TYPE.title,
+    fontFamily: FONTS.titleBold,
     fontSize: 18,
     lineHeight: 20,
     letterSpacing: 0.3,
@@ -139,6 +139,6 @@ const styles = StyleSheet.create({
   // suivre le texte gravé clair du nom.
   priceSpot: { position: 'absolute', flexDirection: 'row', alignItems: 'center', borderRadius: RADIUS.sm },
   pricePressed: { opacity: 0.6 },
-  price: { ...TYPE.price, flex: 1, fontSize: 24, textAlign: 'center', color: COLORS.onGold },
+  price: { fontFamily: FONTS.titleBold, flex: 1, fontSize: 24, textAlign: 'center', color: COLORS.onGold },
   priceDisabled: { color: COLORS.muted },
 });
