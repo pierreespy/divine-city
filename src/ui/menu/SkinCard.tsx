@@ -40,10 +40,13 @@ const ART_BOX = { left: '13%', right: '13%', top: '3.5%', bottom: '25%' } as con
 /**
  * Le prix, posé juste après la couronne déjà gravée dans la plaque.
  *
- * ⚠️ La zone tient jusqu'au rivet droit de la plaque : à 43 % de marge
- * gauche, « 1 200 » ne rentrait plus et se tronquait en « 12… ».
+ * ⚠️ Le nombre est CALÉ À GAUCHE sur ce repère, qui tombe au bord droit de
+ * la couronne : il commence donc toujours au même endroit, quel qu'en soit
+ * le nombre de chiffres. Centré, « 500 » et « 1 200 » ne partaient pas du
+ * même point et le prix semblait flotter sur la plaque. La zone court
+ * jusqu'au rivet droit pour que « 1 200 » y tienne en entier.
  */
-const PRICE_SPOT = { left: '38%', right: '7%', top: '78.5%', height: '17%' } as const;
+const PRICE_SPOT = { left: '42%', right: '5%', top: '78.5%', height: '17%' } as const;
 
 export function SkinCard({
   skin,
@@ -116,6 +119,6 @@ const styles = StyleSheet.create({
   priceSpot: { position: 'absolute', flexDirection: 'row', alignItems: 'center', borderRadius: RADIUS.sm },
   pricePressed: { opacity: 0.6 },
   // Taille FIXE, calée sur le plus long prix du catalogue (« 1 200 »).
-  price: { ...TYPE.price, flex: 1, fontSize: 22, textAlign: 'center', color: COLORS.onGold },
+  price: { ...TYPE.price, flex: 1, fontSize: 22, textAlign: 'left', color: COLORS.onGold },
   priceDisabled: { color: COLORS.muted },
 });
