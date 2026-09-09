@@ -248,8 +248,27 @@ const styles = StyleSheet.create({
   // ⚠️ Le Cinzel est une capitale gravée : à taille égale il tient bien
   // moins de signes qu'une lettre de labeur. « Parure Olympienne » règle
   // ces tailles — c'est la plus longue ligne de légende du catalogue.
-  skinGod: { ...TYPE.body, fontSize: 10, lineHeight: 13, color: COLORS.muted, textAlign: 'center' },
-  skinName: { ...TYPE.title, fontSize: 14, lineHeight: 17, color: COLORS.text, textAlign: 'center' },
+  // ⚠️ `alignSelf: 'stretch'` n'est pas décoratif. La colonne centre ses
+  // enfants (`alignItems: 'center'`), donc un texte y est mesuré sur son
+  // contenu, pas sur la largeur de la carte : au-delà, il déborde et se
+  // fait rogner au bord droit au lieu de passer à la ligne. Étiré sur la
+  // colonne, il connaît sa largeur et se replie tout seul.
+  skinGod: {
+    ...TYPE.body,
+    alignSelf: 'stretch',
+    fontSize: 10,
+    lineHeight: 13,
+    color: COLORS.muted,
+    textAlign: 'center',
+  },
+  skinName: {
+    ...TYPE.title,
+    alignSelf: 'stretch',
+    fontSize: 14,
+    lineHeight: 17,
+    color: COLORS.text,
+    textAlign: 'center',
+  },
 
   empty: { ...TYPE.body, color: COLORS.text, textAlign: 'center', lineHeight: 20 },
 
