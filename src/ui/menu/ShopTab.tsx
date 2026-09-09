@@ -22,12 +22,22 @@
  * parure porte donc toujours l'icône du laurier, jamais celle de l'or.
  */
 
-import { Image, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { CHARACTER_ORDER, characterById, type CharacterId } from '../../entities/characters/roster';
 import { characterPrice, ownsCharacter, ownsSkin, type Progression } from '../../meta/progression';
-import { GOLD_PACKS, LAUREL_PACKS, purchasableSkins, RARITY_COLOR } from '../../meta/store';
+import { GOLD_PACKS, LAUREL_PACKS, skinById } from '../../meta/store';
 import { Button, Card, Coin, GodBadge, Laurel, SectionTitle } from './parts';
-import { COLORS, RADIUS, SPACE, TYPE, hex } from './theme';
+import { SkinCard } from './SkinCard';
+import { COLORS, RADIUS, SPACE, TYPE } from './theme';
+
+/**
+ * Le rayon des parures montre trois pièces choisies, pas tout le
+ * catalogue : une vitrine, pas une liste. En attendant un vrai tirage
+ * (rotation, mise en avant), la sélection reste fixe ici.
+ */
+const FEATURED_SKIN_IDS = ['ares-rage-du-lion', 'poseidon-roi-des-abysses', 'hermes-messager-d-or'] as const;
+
+const SKIN_CARD_WIDTH = 220;
 
 interface Props {
   state: Progression;
@@ -37,8 +47,9 @@ interface Props {
 
 export function ShopTab({ state, onBuyCharacter, onBuySkin }: Props) {
   const characters = CHARACTER_ORDER.filter((id) => !ownsCharacter(state, id));
-  const skins = purchasableSkins().filter(
-    (skin) => ownsCharacter(state, skin.characterId) && !ownsSkin(state, skin.id),
+  const skins = FEATURED_SKIN_IDS.map((id) => skinById(id)).filter(
+    (skin): skin is NonNullable<typeof skin> =>
+      skin !== null && ownsCharacter(state, skin.characterId) && !ownsSkin(state, skin.id),
   );
   const featured = GOLD_PACKS.find((pack) => pack.featured) ?? GOLD_PACKS[0];
 
@@ -111,33 +122,24 @@ export function ShopTab({ state, onBuyCharacter, onBuySkin }: Props) {
       {skins.length > 0 && (
         <>
           <SectionTitle>Parures</SectionTitle>
-          <View style={styles.skinRow}>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            snapToInterval={SKIN_CARD_WIDTH + SPACE.md}
+            decelerationRate="fast"
+            contentContainerStyle={styles.skinRail}
+            nestedScrollEnabled
+          >
             {skins.map((skin) => {
-              const isModel = skin.rarity === 'olympien';
-              const characterAppearance = characterById(skin.characterId).appearance;
-              // Une recolorée (mortel/héros/titan) se reconnaît d'un coup
-              // d'œil à sa couleur ; une olympienne est un modèle 3D à part,
-              // pas encore prévisualisable en jeu — mais son illustration
-              // (`preview`), quand elle existe, vaut mieux que le rond de
-              // couleur uni.
+              const cannotAfford = state.laurels < skin.price;
               return (
-                <Card key={skin.id} style={[styles.skin, isModel && styles.skinLegendary]}>
-                  {skin.preview !== undefined ? (
-                    <Image source={skin.preview} style={styles.skinPreview} resizeMode="contain" />
-                  ) : (
-                    <View
-                      style={[
-                        styles.skinDot,
-                        {
-                          backgroundColor: hex(isModel ? characterAppearance.color : skin.color),
-                          borderColor: hex(RARITY_COLOR[skin.rarity]),
-                        },
-                      ]}
-                    />
-                  )}
-                  <Text style={styles.skinLabel} numberOfLines={1}>
-                    {skin.label}
-                  </Text>
+                <View key={skin.id} style={styles.skinSlot}>
+                  <SkinCard
+                    skin={skin}
+                    width={SKIN_CARD_WIDTH}
+                    onBuy={() => onBuySkin(skin.id)}
+                    disabled={cannotAfford}
+                  />
                   <Text style={styles.skinGod} numberOfLines={1}>
                     {characterById(skin.characterId).label}
                   </Text>
@@ -145,7 +147,7 @@ export function ShopTab({ state, onBuyCharacter, onBuySkin }: Props) {
                     testID={`buy-${skin.id}`}
                     label="Acheter"
                     variant="primary"
-                    disabled={state.laurels < skin.price}
+                    disabled={cannotAfford}
                     price={
                       <>
                         <Laurel size={14} />
@@ -156,10 +158,10 @@ export function ShopTab({ state, onBuyCharacter, onBuySkin }: Props) {
                     hint={`Acheter la parure ${skin.label}`}
                     style={styles.skinButton}
                   />
-                </Card>
+                </View>
               );
             })}
-          </View>
+          </ScrollView>
         </>
       )}
 
@@ -230,16 +232,13 @@ const styles = StyleSheet.create({
   rowSub: { ...TYPE.body, fontSize: 12, color: COLORS.muted },
   rowButton: { minWidth: 92 },
 
-  skinRow: { flexDirection: 'row', flexWrap: 'wrap', gap: SPACE.sm },
-  skin: { width: '31%', minWidth: 96, alignItems: 'center', gap: 2 },
-  // Le cadre doré signale une légendaire : pas de recoloration à montrer, il
-  // faut un autre repère visuel — cohérent avec le laurier de son prix.
-  skinLegendary: { borderColor: COLORS.gold, borderWidth: 2 },
-  skinDot: { width: 30, height: 30, borderRadius: 15, borderWidth: 3 },
-  skinPreview: { width: 56, height: 56 },
-  skinLabel: { ...TYPE.strong, fontSize: 13, color: COLORS.text },
+  // La rangée glisse à l'horizontale : une carte à la fois, en plein cadre,
+  // plutôt qu'une grille qui aurait tassé les cadres de rareté au point de
+  // ne plus se lire.
+  skinRail: { gap: SPACE.md, paddingHorizontal: SPACE.sm },
+  skinSlot: { width: SKIN_CARD_WIDTH, alignItems: 'center', gap: SPACE.xs },
   skinGod: { ...TYPE.body, fontSize: 11, color: COLORS.muted },
-  skinButton: { alignSelf: 'stretch', marginTop: SPACE.xs, minHeight: 34 },
+  skinButton: { alignSelf: 'stretch', minHeight: 34 },
   skinPrice: { ...TYPE.price, fontSize: 13, color: COLORS.onGold },
 
   empty: { ...TYPE.body, color: COLORS.text, textAlign: 'center', lineHeight: 20 },

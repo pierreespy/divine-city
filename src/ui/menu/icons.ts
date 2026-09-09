@@ -15,6 +15,7 @@
 
 import type { ImageSourcePropType } from 'react-native';
 import type { CharacterId } from '../../entities/characters/roster';
+import type { SkinRarity } from '../../meta/store';
 import type { DistrictId } from '../../world/districts';
 
 export const ICONS = {
@@ -110,6 +111,19 @@ export const DISTRICT_ICONS: Partial<Record<DistrictId, ImageSourcePropType>> = 
  */
 export const PORTRAITS: Partial<Record<CharacterId, ImageSourcePropType>> = {
   zeus: require('../../../assets/ui/zeus.png') as ImageSourcePropType,
+};
+
+/**
+ * Le cadre de carte d'une parure, un par rareté — du gris mortel à l'or
+ * olympien. Chacun porte déjà sa propre couronne de laurier gravée dans une
+ * plaque en bas : c'est à côté d'elle que `SkinCard` pose le prix, jamais
+ * une seconde couronne à part.
+ */
+export const RARITY_FRAMES: Readonly<Record<SkinRarity, ImageSourcePropType>> = {
+  mortel: require('../../../assets/ui/Case_Mortelle.png') as ImageSourcePropType,
+  heros: require('../../../assets/ui/Case_Heroique.png') as ImageSourcePropType,
+  titan: require('../../../assets/ui/Case_Titanesque.png') as ImageSourcePropType,
+  olympien: require('../../../assets/ui/Case_Olympienne.png') as ImageSourcePropType,
 };
 
 /**

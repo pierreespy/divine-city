@@ -1,7 +1,7 @@
 import { Asset } from 'expo-asset';
 
 import { purchasableSkins } from '../../meta/store';
-import { ART, DISTRICT_ICONS, ICONS, PLATES, PORTRAITS } from './icons';
+import { ART, DISTRICT_ICONS, ICONS, PLATES, PORTRAITS, RARITY_FRAMES } from './icons';
 
 /** Les deux décors du ruban, partagés avec `MenuScreen`. */
 export const MENU_WALLPAPERS = {
@@ -24,6 +24,7 @@ const MENU_ASSETS = [
   ...Object.values(DISTRICT_ICONS),
   ...Object.values(PORTRAITS),
   ...Object.values(PLATES),
+  ...Object.values(RARITY_FRAMES),
   ...Object.values(MENU_WALLPAPERS),
   ...purchasableSkins().flatMap((skin) => (skin.preview === undefined ? [] : [skin.preview])),
 ] as AssetModule[];
