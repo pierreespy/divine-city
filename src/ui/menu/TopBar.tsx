@@ -53,8 +53,15 @@ const BAR_HEIGHT = 306 / 2170;
  * haut de fichier.
  */
 const SLOTS = {
-  /** La languette gravée du nom du dieu. */
-  name: { left: 161 / 768, top: 29 / 768, width: 160 / 768, height: 56 / 768 },
+  /**
+   * La languette gravée du nom du dieu.
+   *
+   * ⚠️ Le nom s'y écrit CALÉ À GAUCHE, contre le médaillon : la languette
+   * dessinée s'évase vers la droite, et un nom centré dans sa boîte flottait
+   * au-dessus de la pointe au lieu de suivre la gravure. La boîte tient donc
+   * la seule hauteur du texte, posée sur la ligne du dessin.
+   */
+  name: { left: 165 / 768, top: 45 / 768, width: 158 / 768, height: 24 / 768 },
   /** Le champ sombre de la bourse d'or, entre son jeton et son « + ». */
   gold: { left: 412 / 768, top: 20 / 768, width: 97 / 768, height: 59 / 768 },
   /** Le même, pour les lauriers. */
@@ -273,7 +280,7 @@ const styles = StyleSheet.create({
   /** Toute boîte posée sur le dessin centre son contenu, sans rien peindre. */
   slot: { alignItems: 'center', justifyContent: 'center' },
 
-  name: { fontFamily: TYPE.title.fontFamily, color: COLORS.text },
+  name: { fontFamily: TYPE.title.fontFamily, color: COLORS.text, alignSelf: 'stretch', textAlign: 'left' },
   // Les deux montants se lisent sur le champ SOMBRE des bourses : ils sont
   // clairs, et leur ombre les décolle du bois.
   purse: { fontFamily: TYPE.price.fontFamily, color: COLORS.onDark, ...TEXT_SHADOW },
