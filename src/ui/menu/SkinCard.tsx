@@ -40,8 +40,13 @@ const ART_BOX = { left: '14.4%', right: '14.7%', top: '3%', bottom: '38%' } as c
 /** La bande du nom, entre le bas de l'illustration et la plaque à lauriers. */
 const NAME_BAND = { left: '10%', right: '10%', top: '63.5%', height: '13%' } as const;
 
-/** Le prix, posé juste après la couronne déjà gravée dans la plaque. */
-const PRICE_SPOT = { left: '43%', right: '6%', top: '78.5%', height: '17%' } as const;
+/**
+ * Le prix, posé juste après la couronne déjà gravée dans la plaque.
+ *
+ * ⚠️ La zone tient jusqu'au rivet droit de la plaque : à 43 % de marge
+ * gauche, « 1 200 » ne rentrait plus et se tronquait en « 12… ».
+ */
+const PRICE_SPOT = { left: '38%', right: '7%', top: '78.5%', height: '17%' } as const;
 
 export function SkinCard({
   skin,
@@ -100,7 +105,12 @@ export function SkinCard({
         hitSlop={6}
         style={({ pressed }) => [styles.priceSpot, PRICE_SPOT, pressed && styles.pricePressed]}
       >
-        <Text style={[styles.price, disabled && styles.priceDisabled]} numberOfLines={1}>
+        <Text
+          style={[styles.price, disabled && styles.priceDisabled]}
+          numberOfLines={1}
+          adjustsFontSizeToFit
+          minimumFontScale={0.6}
+        >
           {skin.price.toLocaleString('fr-FR')}
         </Text>
       </Pressable>
@@ -129,6 +139,6 @@ const styles = StyleSheet.create({
   // suivre le texte gravé clair du nom.
   priceSpot: { position: 'absolute', flexDirection: 'row', alignItems: 'center', borderRadius: RADIUS.sm },
   pricePressed: { opacity: 0.6 },
-  price: { ...TYPE.price, fontSize: 26, color: COLORS.onGold },
+  price: { ...TYPE.price, flex: 1, fontSize: 24, textAlign: 'center', color: COLORS.onGold },
   priceDisabled: { color: COLORS.muted },
 });

@@ -25,17 +25,23 @@
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { CHARACTER_ORDER, characterById, type CharacterId } from '../../entities/characters/roster';
 import { characterPrice, ownsCharacter, ownsSkin, type Progression } from '../../meta/progression';
-import { GOLD_PACKS, LAUREL_PACKS, skinById } from '../../meta/store';
+import { GOLD_PACKS, LAUREL_PACKS, purchasableSkins, type Skin } from '../../meta/store';
 import { Button, Card, Coin, GodBadge, Laurel, SectionTitle } from './parts';
 import { SkinCard } from './SkinCard';
 import { COLORS, RADIUS, SPACE, TYPE } from './theme';
 
 /**
- * Le rayon des parures montre trois pièces choisies, pas tout le
- * catalogue : une vitrine, pas une liste. En attendant un vrai tirage
- * (rotation, mise en avant), la sélection reste fixe ici.
+ * Le rayon des parures est une VITRINE QUI DÉFILE : une carte en plein
+ * cadre, les voisines à portée de pouce de part et d'autre.
+ *
+ * ⚠️ Seules les parures qui ont une illustration (`preview`) y entrent —
+ * une recoloration sans dessin n'afficherait qu'un cadre vide, et une carte
+ * vide dans une vitrine coûte plus qu'elle ne rapporte. Les autres restent
+ * visibles sur la fiche de leur dieu, à l'Olympe.
  */
-const FEATURED_SKIN_IDS = ['ares-rage-du-lion', 'poseidon-roi-des-abysses', 'hermes-messager-d-or'] as const;
+function shopSkins(state: Progression): Skin[] {
+  return purchasableSkins().filter((skin) => skin.preview !== undefined && !ownsSkin(state, skin.id));
+}
 
 const SKIN_CARD_WIDTH = 220;
 
@@ -47,12 +53,10 @@ interface Props {
 
 export function ShopTab({ state, onBuyCharacter, onBuySkin }: Props) {
   const characters = CHARACTER_ORDER.filter((id) => !ownsCharacter(state, id));
-  // ⚠️ La vitrine montre TOUJOURS ses trois pièces, même celles d'un dieu que
-  // le joueur n'a pas encore : une vitrine à une seule carte n'est plus une
+  // ⚠️ La vitrine montre TOUTES ses pièces, même celles d'un dieu que le
+  // joueur n'a pas encore : une vitrine à une seule carte n'est plus une
   // vitrine. Seule une parure DÉJÀ possédée disparaît (règle du rayon).
-  const skins = FEATURED_SKIN_IDS.map((id) => skinById(id)).filter(
-    (skin): skin is NonNullable<typeof skin> => skin !== null && !ownsSkin(state, skin.id),
-  );
+  const skins = shopSkins(state);
   const featured = GOLD_PACKS.find((pack) => pack.featured) ?? GOLD_PACKS[0];
 
   return (
