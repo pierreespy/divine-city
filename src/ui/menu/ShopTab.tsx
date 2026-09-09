@@ -151,15 +151,15 @@ export function ShopTab({ state, onBuyCharacter, onBuySkin }: Props) {
                     onBuy={() => onBuySkin(skin.id)}
                     disabled={locked || state.laurels < skin.price}
                   />
-                  {/* Le cadre ne porte que le dessin et le prix : le dieu et
-                      la rareté sur une ligne, le nom de la parure sur la
-                      suivante, sous la carte où ils tiennent en entier. */}
-                  {/* Aucun `numberOfLines` sur ces trois lignes : un nom
-                      coupé par des points de suspension ne dit plus ce qu'on
-                      achète. Elles s'écrivent en entier, quitte à passer à
-                      la ligne sous la carte. */}
+                  {/* Le cadre ne porte que le dessin et le prix. Sous la
+                      carte, une ligne par information — le dieu, puis la
+                      rareté, puis le nom — et aucun `numberOfLines` : un nom
+                      trop long passe à la ligne plutôt que de se couper en
+                      points de suspension, qui ne diraient plus ce qu'on
+                      achète. */}
+                  <Text style={styles.skinGod}>{godLabel}</Text>
                   <Text style={styles.skinGod}>
-                    {`${godLabel} - Parure ${RARITY_ADJECTIVE[skin.rarity]}`}
+                    {`Parure ${RARITY_ADJECTIVE[skin.rarity]}`}
                   </Text>
                   <Text style={styles.skinName}>
                     {skin.label}
@@ -242,10 +242,12 @@ const styles = StyleSheet.create({
   // plutôt qu'une grille qui aurait tassé les cadres de rareté au point de
   // ne plus se lire.
   skinRail: { gap: SPACE.md, paddingHorizontal: SPACE.sm },
-  skinSlot: { width: SKIN_CARD_WIDTH, alignItems: 'center', gap: SPACE.xs },
+  // Les lignes de légende se suivent SANS écart : elles forment un bloc,
+  // pas trois textes posés côte à côte. L'écart les sépare de la carte.
+  skinSlot: { width: SKIN_CARD_WIDTH, alignItems: 'center', paddingTop: SPACE.xs },
   // ⚠️ Le Cinzel est une capitale gravée : à taille égale il tient bien
-  // moins de signes qu'une lettre de labeur. « Arès - Parure Olympienne »
-  // règle ces tailles — c'est la plus longue première ligne du catalogue.
+  // moins de signes qu'une lettre de labeur. « Parure Olympienne » règle
+  // ces tailles — c'est la plus longue ligne de légende du catalogue.
   skinGod: { ...TYPE.body, fontSize: 10, lineHeight: 13, color: COLORS.muted, textAlign: 'center' },
   skinName: { ...TYPE.title, fontSize: 14, lineHeight: 17, color: COLORS.text, textAlign: 'center' },
 
