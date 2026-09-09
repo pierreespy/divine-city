@@ -105,12 +105,7 @@ export function SkinCard({
         hitSlop={6}
         style={({ pressed }) => [styles.priceSpot, PRICE_SPOT, pressed && styles.pricePressed]}
       >
-        <Text
-          style={[styles.price, disabled && styles.priceDisabled]}
-          numberOfLines={1}
-          adjustsFontSizeToFit
-          minimumFontScale={0.6}
-        >
+        <Text style={[styles.price, disabled && styles.priceDisabled]} numberOfLines={1}>
           {skin.price.toLocaleString('fr-FR')}
         </Text>
       </Pressable>
@@ -139,6 +134,9 @@ const styles = StyleSheet.create({
   // suivre le texte gravé clair du nom.
   priceSpot: { position: 'absolute', flexDirection: 'row', alignItems: 'center', borderRadius: RADIUS.sm },
   pricePressed: { opacity: 0.6 },
-  price: { fontFamily: FONTS.titleBold, flex: 1, fontSize: 24, textAlign: 'center', color: COLORS.onGold },
+  // ⚠️ Une taille FIXE, calée sur le plus long prix du catalogue (« 1 200 »).
+  // Pas d'`adjustsFontSizeToFit` ici : il fait retomber le Cinzel sur la
+  // police système dès qu'il doit réduire, et le prix cesse d'être gravé.
+  price: { fontFamily: FONTS.titleBold, flex: 1, fontSize: 22, textAlign: 'center', color: COLORS.onGold },
   priceDisabled: { color: COLORS.muted },
 });
