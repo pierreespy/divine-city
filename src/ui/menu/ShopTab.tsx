@@ -138,8 +138,8 @@ export function ShopTab({ state, onBuyCharacter, onBuySkin }: Props) {
           >
             {skins.map((skin) => {
               // Une parure ne s'achète que si son dieu est déjà au panthéon
-              // (`buySkin`) : la carte le dit, plutôt que de rester muette
-              // sous le doigt.
+              // (`buySkin`) : sa plaque reste alors inerte, sans l'annoncer
+              // en toutes lettres sous la carte.
               const locked = !ownsCharacter(state, skin.characterId);
               const godLabel = characterById(skin.characterId).label;
               return (
@@ -164,11 +164,6 @@ export function ShopTab({ state, onBuyCharacter, onBuySkin }: Props) {
                   <Text style={styles.skinName}>
                     {skin.label}
                   </Text>
-                  {locked && (
-                    <Text style={styles.skinLocked}>
-                      {`Débloque ${godLabel} pour l'acheter`}
-                    </Text>
-                  )}
                 </View>
               );
             })}
@@ -253,7 +248,6 @@ const styles = StyleSheet.create({
   // règle ces tailles — c'est la plus longue première ligne du catalogue.
   skinGod: { ...TYPE.body, fontSize: 10, lineHeight: 13, color: COLORS.muted, textAlign: 'center' },
   skinName: { ...TYPE.title, fontSize: 14, lineHeight: 17, color: COLORS.text, textAlign: 'center' },
-  skinLocked: { ...TYPE.body, fontSize: 10, lineHeight: 13, color: COLORS.locked, textAlign: 'center' },
 
   empty: { ...TYPE.body, color: COLORS.text, textAlign: 'center', lineHeight: 20 },
 
