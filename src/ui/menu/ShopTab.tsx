@@ -25,7 +25,14 @@
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { CHARACTER_ORDER, characterById, type CharacterId } from '../../entities/characters/roster';
 import { characterPrice, ownsCharacter, ownsSkin, type Progression } from '../../meta/progression';
-import { GOLD_PACKS, LAUREL_PACKS, purchasableSkins, RARITY_ADJECTIVE, type Skin } from '../../meta/store';
+import {
+  GOLD_PACKS,
+  LAUREL_PACKS,
+  purchasableSkins,
+  RARITY_ADJECTIVE,
+  type LaurelPack,
+  type Skin,
+} from '../../meta/store';
 import { Button, Card, Coin, GodBadge, Laurel, SectionTitle } from './parts';
 import { SkinCard } from './SkinCard';
 import { COLORS, RADIUS, SPACE, TYPE } from './theme';
@@ -44,6 +51,15 @@ function shopSkins(state: Progression): Skin[] {
 }
 
 const SKIN_CARD_WIDTH = 220;
+
+/** Les trois paliers montrés en rayon : l'appel, le courant, le mis en avant. */
+const SHOP_LAUREL_PACK_IDS = ['petit', 'moyen', 'genereux'] as const;
+
+function shopLaurelPacks(): LaurelPack[] {
+  return SHOP_LAUREL_PACK_IDS.map((id) => LAUREL_PACKS.find((pack) => pack.id === id)).filter(
+    (pack): pack is LaurelPack => pack !== undefined,
+  );
+}
 
 interface Props {
   state: Progression;
@@ -82,8 +98,12 @@ export function ShopTab({ state, onBuyCharacter, onBuySkin }: Props) {
       </Card>
 
       <SectionTitle>Acheter des lauriers</SectionTitle>
+      {/* ⚠️ TROIS paquets, pas les cinq du catalogue : la rangée les pose
+          côte à côte, et au-delà de trois une case n'est plus assez large
+          pour porter son montant. Les paliers intermédiaires restent dans
+          `LAUREL_PACKS` — ils serviront à une page de paquets à part. */}
       <View style={styles.packRow}>
-        {LAUREL_PACKS.map((pack) => (
+        {shopLaurelPacks().map((pack) => (
           <View key={pack.id} style={[styles.pack, pack.featured && styles.packOn]}>
             <Laurel size={26} />
             <Text style={styles.packAmount}>{pack.laurels.toLocaleString('fr-FR')}</Text>

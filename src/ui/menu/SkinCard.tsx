@@ -46,7 +46,7 @@ const ART_BOX = { left: '13%', right: '13%', top: '3.5%', bottom: '25%' } as con
  * même point et le prix semblait flotter sur la plaque. La zone court
  * jusqu'au rivet droit pour que « 1 200 » y tienne en entier.
  */
-const PRICE_SPOT = { left: '42%', right: '5%', top: '78.5%', height: '17%' } as const;
+const PRICE_SPOT = { left: '45%', right: '25.5%', top: '82.8%', height: '8.8%' } as const;
 
 export function SkinCard({
   skin,
@@ -119,6 +119,6 @@ const styles = StyleSheet.create({
   priceSpot: { position: 'absolute', flexDirection: 'row', alignItems: 'center', borderRadius: RADIUS.sm },
   pricePressed: { opacity: 0.6 },
   // Taille FIXE, calée sur le plus long prix du catalogue (« 1 200 »).
-  price: { ...TYPE.price, flex: 1, fontSize: 22, textAlign: 'left', color: COLORS.onGold },
+  price: { ...TYPE.price, flex: 1, fontSize: 22, lineHeight: 26, textAlign: 'left', color: COLORS.onGold },
   priceDisabled: { color: COLORS.muted },
 });
