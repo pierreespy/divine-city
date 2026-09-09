@@ -151,8 +151,14 @@ export function ShopTab({ state, onBuyCharacter, onBuySkin }: Props) {
                     onBuy={() => onBuySkin(skin.id)}
                     disabled={locked || state.laurels < skin.price}
                   />
+                  {/* Le cadre ne porte que le dessin et le prix : le dieu
+                      puis le nom de la parure se lisent sous la carte, où
+                      ils ont la place de s'écrire en entier. */}
                   <Text style={styles.skinGod} numberOfLines={2}>
                     {locked ? `Débloque ${godLabel}` : godLabel}
+                  </Text>
+                  <Text style={styles.skinName} numberOfLines={2}>
+                    {skin.label}
                   </Text>
                 </View>
               );
@@ -233,7 +239,8 @@ const styles = StyleSheet.create({
   // ne plus se lire.
   skinRail: { gap: SPACE.md, paddingHorizontal: SPACE.sm },
   skinSlot: { width: SKIN_CARD_WIDTH, alignItems: 'center', gap: SPACE.xs },
-  skinGod: { ...TYPE.body, fontSize: 11, color: COLORS.muted },
+  skinGod: { ...TYPE.body, fontSize: 11, color: COLORS.muted, textAlign: 'center' },
+  skinName: { ...TYPE.title, fontSize: 15, color: COLORS.text, textAlign: 'center' },
 
   empty: { ...TYPE.body, color: COLORS.text, textAlign: 'center', lineHeight: 20 },
 

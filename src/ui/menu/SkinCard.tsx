@@ -4,8 +4,10 @@
  *
  * ⚠️ Les quatre cadres (`RARITY_FRAMES`) viennent d'un même gabarit dessiné
  * à la main : une plaque à lauriers en bas, un panneau pour l'illustration
- * au-dessus. Les repères ci-dessous (`ART_BOX`, `NAME_BAND`, `PRICE_SPOT`)
- * sont MESURÉS sur ce gabarit, en fractions de la carte — ils ne bougent
+ * au-dessus. Le cadre ne porte QUE le dessin et le prix — le nom de la
+ * parure s'écrit sous la carte, avec celui du dieu.
+ *
+ * ⚠️ Les repères ci-dessous (`ART_BOX`, `PRICE_SPOT`) sont MESURÉS sur ce gabarit, en fractions de la carte — ils ne bougent
  * qu'ensemble avec le dessin des cadres, jamais par rareté : les quatre
  * partagent la même mise en page, seule la teinte et la bordure changent.
  *
@@ -18,14 +20,6 @@ import type { Skin } from '../../meta/store';
 import { RARITY_FRAMES } from './icons';
 import { COLORS, RADIUS, TYPE } from './theme';
 
-/** Un texte gravé, clair et cerclé de sombre : lisible sur les quatre fonds de cadre, de l'or clair au bordeaux. */
-const engraved = {
-  color: '#fbf1dc',
-  textShadowColor: 'rgba(30, 15, 5, 0.75)',
-  textShadowOffset: { width: 0, height: 1 },
-  textShadowRadius: 3,
-} as const;
-
 /** Aspect (largeur / hauteur) de chaque cadre — ils ne sont pas tout à fait carrés. */
 const FRAME_ASPECT: Readonly<Record<Skin['rarity'], number>> = {
   mortel: 1073 / 1466,
@@ -34,34 +28,14 @@ const FRAME_ASPECT: Readonly<Record<Skin['rarity'], number>> = {
   olympien: 1080 / 1457,
 };
 
-/** Le panneau qui reçoit l'illustration, en fractions de la carte. */
-const ART_BOX = { left: '14.4%', right: '14.7%', top: '3%', bottom: '38%' } as const;
-
 /**
- * La bande du nom, entre le bas de l'illustration et la plaque à lauriers.
+ * Le panneau qui reçoit l'illustration, en fractions de la carte.
  *
- * Elle descend jusqu'à la plaque : un nom de plusieurs mots s'écrit sur
- * plusieurs lignes (voir `lines()`), il lui faut la hauteur pour les poser.
+ * ⚠️ Il descend jusqu'à la plaque à lauriers : le nom de la parure ne
+ * s'écrit plus DANS le cadre mais sous lui (voir `ShopTab`), et toute la
+ * hauteur libérée revient au dessin — c'est lui qu'on achète.
  */
-const NAME_BAND = { left: '8%', right: '8%', top: '62.5%', height: '16%' } as const;
-
-/** Au-delà, le nom ne tiendrait plus dans la bande. */
-const MAX_NAME_LINES = 3;
-
-/**
- * Un mot par ligne.
- *
- * ⚠️ Ce n'est PAS le retour à la ligne automatique : « Roi des Abysses »
- * tiendrait sur deux lignes coupées n'importe où, alors qu'un nom de parure
- * se lit comme un titre gravé — chaque mot sur sa ligne, centré. Au-delà de
- * trois mots, les derniers restent ensemble sur la dernière ligne plutôt que
- * de déborder sous la plaque.
- */
-function lines(label: string): string {
-  const words = label.split(' ');
-  if (words.length <= MAX_NAME_LINES) return words.join('\n');
-  return [...words.slice(0, MAX_NAME_LINES - 1), words.slice(MAX_NAME_LINES - 1).join(' ')].join('\n');
-}
+const ART_BOX = { left: '13%', right: '13%', top: '3.5%', bottom: '25%' } as const;
 
 /**
  * Le prix, posé juste après la couronne déjà gravée dans la plaque.
@@ -110,12 +84,6 @@ export function SkinCard({
         </View>
       )}
 
-      <View style={[styles.nameBand, NAME_BAND]}>
-        <Text style={styles.name} numberOfLines={MAX_NAME_LINES}>
-          {lines(skin.label)}
-        </Text>
-      </View>
-
       {/* La plaque à lauriers EST le bouton d'achat : toucher le prix achète
           la parure, pas seulement le bouton séparé sous la carte. */}
       <Pressable
@@ -141,20 +109,6 @@ const styles = StyleSheet.create({
 
   artBox: { position: 'absolute', alignItems: 'center', justifyContent: 'flex-end' },
   art: { width: '100%', height: '100%' },
-
-  nameBand: { position: 'absolute', alignItems: 'center', justifyContent: 'center' },
-  // ⚠️ Le nom et le prix ci-dessous passent par les jetons du thème, comme
-  // « CONVERSION » ou le « 1 000 » de la conversion : la carte n'a pas de
-  // police à elle. Et pas d'`adjustsFontSizeToFit` : sa réduction fait
-  // retomber le texte sur la police système, et la gravure disparaît.
-  name: {
-    ...TYPE.price,
-    fontSize: 15,
-    lineHeight: 17,
-    letterSpacing: 0.3,
-    textAlign: 'center',
-    ...engraved,
-  },
 
   // La plaque à lauriers est TOUJOURS dorée, quelle que soit la rareté du
   // corps de la carte — le prix reste donc en encre sombre sur cet or, sans
