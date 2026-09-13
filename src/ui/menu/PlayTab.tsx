@@ -107,14 +107,14 @@ export function PlayTab({ state, onPlay }: Props) {
               flux, le blason ne dispute plus la largeur au titre : celui-ci se
               centre seul sur le cadre entier, et se retrouve juste centré. */}
           <View style={styles.leagueHead}>
-            <Text
+            <View
               style={styles.leagueCrest}
               accessible={false}
               importantForAccessibility="no"
               pointerEvents="none"
             >
-              🦅
-            </Text>
+              <Image source={ART.leagueEagle} resizeMode="contain" style={styles.leagueCrestImage} />
+            </View>
             {/* `numberOfLines={2}` : un niveau à trois chiffres ne tient plus
                 sur une ligne, et le laisser passer plutôt que le tronquer. Le
                 cadre n'a qu'un `minHeight` : une seconde ligne, rare, l'étire
@@ -338,7 +338,8 @@ const styles = StyleSheet.create({
   // `position: relative` : le repère du blason, posé hors flux (voir
   // plus haut). Sans lui, son `absolute` se poserait sur la carte entière.
   leagueHead: { position: 'relative', minHeight: 22, justifyContent: 'center' },
-  leagueCrest: { position: 'absolute', left: 0, top: 0, fontSize: 20, width: 20, textAlign: 'center' },
+  leagueCrest: { position: 'absolute', left: 0, top: 0, width: 20, height: 20 },
+  leagueCrestImage: { width: 20, height: 20 },
   // ⚠️ `letterSpacing` retombe à 0.6 : celui de `TYPE.label` (1,4) est taillé
   // pour un intitulé de section, court. Sur les vingt-sept lettres de ce
   // titre-ci, il ajoute à lui seul près de 40 points et pousse le rang à

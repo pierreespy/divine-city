@@ -17,10 +17,11 @@
  */
 
 import { useRef } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, View, type ImageSourcePropType } from 'react-native';
 import type { Progression } from '../../meta/progression';
 import { rankOf } from '../../meta/rank';
 import { Bar, Button, Card, Coin, Tile } from './parts';
+import { PASS_REWARD_ART } from './icons';
 import { COLORS, SPACE, TYPE } from './theme';
 
 /** Le nombre de paliers d'une saison. */
@@ -52,17 +53,17 @@ function roman(value: number): string {
  * paliers ronds (5, 10, 15…) portent la pièce montée — c'est ce qui donne
  * envie d'aller « jusqu'au prochain dizainier » plutôt que d'abandonner.
  */
-function rewardAt(step: number, divine: boolean): { icon: string; count: number } {
+function rewardAt(step: number, divine: boolean): { image: ImageSourcePropType; count: number } {
   const milestone = step % 5 === 0;
   if (divine) {
-    if (step % 25 === 0) return { icon: '👑', count: 1 };
-    if (milestone) return { icon: '🗝️', count: 2 };
-    if (step % 3 === 0) return { icon: '🏺', count: 1 };
-    return { icon: '💰', count: 3 };
+    if (step % 25 === 0) return { image: PASS_REWARD_ART.crown, count: 1 };
+    if (milestone) return { image: PASS_REWARD_ART.key, count: 2 };
+    if (step % 3 === 0) return { image: PASS_REWARD_ART.gold, count: 1 };
+    return { image: PASS_REWARD_ART.purse, count: 3 };
   }
-  if (milestone) return { icon: '🧰', count: 1 };
-  if (step % 3 === 0) return { icon: '🧪', count: 1 };
-  return { icon: '💰', count: 1 };
+  if (milestone) return { image: PASS_REWARD_ART.chest, count: 1 };
+  if (step % 3 === 0) return { image: PASS_REWARD_ART.potion, count: 1 };
+  return { image: PASS_REWARD_ART.purse, count: 1 };
 }
 
 /** Les jours qui restent avant la fin du mois — la saison suit le calendrier. */
@@ -104,7 +105,7 @@ export function PassTab({ state }: { state: Progression }) {
                   const reward = rewardAt(n, false);
                   return (
                     <View key={n} style={styles.slot}>
-                      <Tile icon={reward.icon} count={reward.count} state={n <= step ? 'taken' : 'locked'} size={44} />
+                      <Tile image={reward.image} count={reward.count} state={n <= step ? 'taken' : 'locked'} size={44} />
                     </View>
                   );
                 })}
@@ -127,7 +128,7 @@ export function PassTab({ state }: { state: Progression }) {
                     <View key={n} style={styles.slot}>
                       {/* Tout est verrouillé sur la voie divine : elle n'est
                           pas achetée, et elle ne peut pas encore l'être. */}
-                      <Tile icon={reward.icon} count={reward.count} state="locked" size={44} />
+                      <Tile image={reward.image} count={reward.count} state="locked" size={44} />
                     </View>
                   );
                 })}

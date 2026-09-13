@@ -17,6 +17,7 @@ import { CHARACTER_ORDER, CHARACTERS, characterById, type CharacterId } from '..
 import { characterPrice, ownsCharacter, ownsSkin, type Progression } from '../../meta/progression';
 import { RARITY_COLOR, skinsOf } from '../../meta/store';
 import { Button, Card, Coin, GodBadge, Laurel, Plaque } from './parts';
+import { PORTRAITS } from './icons';
 import { COLORS, RADIUS, SPACE, TYPE, hex } from './theme';
 
 interface Props {
@@ -60,12 +61,20 @@ export function OlympeTab({ state, onSelectCharacter, onBuyCharacter, onBuySkin,
 
         <View style={styles.sheetBody}>
           <View style={styles.portrait}>
-            <GodBadge
-              color={character.appearance.color}
-              accent={character.appearance.accent}
-              size={72}
-              dimmed={!owned}
-            />
+            {PORTRAITS[looking] === undefined ? (
+              <GodBadge
+                color={character.appearance.color}
+                accent={character.appearance.accent}
+                size={72}
+                dimmed={!owned}
+              />
+            ) : (
+              <Image
+                source={PORTRAITS[looking]}
+                resizeMode="contain"
+                style={[styles.godPortrait, !owned && styles.godPortraitLocked]}
+              />
+            )}
             <Text style={styles.portraitName} numberOfLines={2}>
               {character.label.toUpperCase()}
             </Text>
@@ -207,7 +216,15 @@ function GodCell({
       {/* L'étoile marque la divinité avec laquelle on partira jouer — une
           information différente de « celle que je regarde ». */}
       {chosen && <Text style={styles.star}>★</Text>}
-      <GodBadge color={character.appearance.color} accent={character.appearance.accent} size={40} dimmed={!owned} />
+      {PORTRAITS[id] === undefined ? (
+        <GodBadge color={character.appearance.color} accent={character.appearance.accent} size={40} dimmed={!owned} />
+      ) : (
+        <Image
+          source={PORTRAITS[id]}
+          resizeMode="contain"
+          style={[styles.cellPortrait, !owned && styles.godPortraitLocked]}
+        />
+      )}
       <Text style={[styles.cellName, !owned && styles.cellNameLocked]} numberOfLines={1}>
         {owned ? character.label : '🔒'}
       </Text>
@@ -251,6 +268,7 @@ const styles = StyleSheet.create({
   cellNameLocked: { color: COLORS.locked },
   cellLockedText: { ...TYPE.tiny, fontSize: 8, color: COLORS.locked },
   star: { position: 'absolute', top: 2, left: 4, fontSize: 12, color: COLORS.gold },
+  cellPortrait: { width: 40, height: 40 },
 
   pressed: { opacity: 0.85 },
 
@@ -258,6 +276,8 @@ const styles = StyleSheet.create({
   sheetBody: { flexDirection: 'row', gap: SPACE.md, marginTop: SPACE.md },
   portrait: { alignItems: 'center', width: 84, gap: SPACE.xs },
   portraitName: { ...TYPE.label, fontSize: 10, color: COLORS.text, textAlign: 'center' },
+  godPortrait: { width: 72, height: 72 },
+  godPortraitLocked: { opacity: 0.28 },
 
   stats: { flex: 1, gap: SPACE.xs },
   stat: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline' },
