@@ -22,7 +22,7 @@
  * parure porte donc toujours l'icône du laurier, jamais celle de l'or.
  */
 
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Image, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { CHARACTER_ORDER, characterById, type CharacterId } from '../../entities/characters/roster';
 import { characterPrice, ownsCharacter, ownsSkin, type Progression } from '../../meta/progression';
 import {
@@ -35,6 +35,7 @@ import {
 } from '../../meta/store';
 import { Button, Card, Coin, GodBadge, Laurel, SectionTitle } from './parts';
 import { SkinCard } from './SkinCard';
+import { ART } from './icons';
 import { COLORS, RADIUS, SPACE, TYPE } from './theme';
 
 /**
@@ -85,7 +86,7 @@ export function ShopTab({ state, onBuyCharacter, onBuySkin }: Props) {
       <SectionTitle>Offre du jour</SectionTitle>
       <Card style={styles.offer} selected>
         <View style={styles.offerBody}>
-          <Text style={styles.offerIcon}>⚡</Text>
+          <Image source={ART.starterOffer} resizeMode="contain" style={styles.offerArt} />
           <View style={styles.offerText}>
             <Text style={styles.offerName}>PACK STARTER OLYMPIEN</Text>
             <Text style={styles.offerDetail}>
@@ -199,6 +200,7 @@ export function ShopTab({ state, onBuyCharacter, onBuySkin }: Props) {
 
       <SectionTitle>Conversion</SectionTitle>
       <Card style={styles.convert}>
+        <Image source={ART.conversionAmphora} resizeMode="contain" style={styles.conversionArt} />
         <Text style={styles.convertText}>
           Changer de l'or contre des lauriers ouvrira avec les achats.
         </Text>
@@ -228,7 +230,7 @@ const styles = StyleSheet.create({
 
   offer: { gap: SPACE.md },
   offerBody: { flexDirection: 'row', alignItems: 'center', gap: SPACE.md },
-  offerIcon: { fontSize: 34 },
+  offerArt: { width: 72, height: 64 },
   offerText: { flex: 1, minWidth: 0 },
   offerName: { ...TYPE.label, fontSize: 11, color: COLORS.text },
   offerDetail: { ...TYPE.body, fontSize: 12, color: COLORS.muted, marginTop: 2, lineHeight: 17 },
@@ -293,6 +295,7 @@ const styles = StyleSheet.create({
   empty: { ...TYPE.body, color: COLORS.text, textAlign: 'center', lineHeight: 20 },
 
   convert: { gap: SPACE.sm },
+  conversionArt: { width: 76, height: 76, alignSelf: 'center' },
   convertText: { ...TYPE.body, fontSize: 12, color: COLORS.muted, lineHeight: 17 },
   convertRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: SPACE.lg },
   convertFrom: { flexDirection: 'row', alignItems: 'center', gap: SPACE.xs },

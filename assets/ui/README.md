@@ -34,6 +34,31 @@ l'Agora — le seul quartier à colonnade (voir `world/districts.ts`). L'ordre �
 l'écran suit le niveau qui ouvre chaque étape, et peut changer sans que ces
 couples bougent.
 
+## Extractions des cinq écrans de référence
+
+Les fichiers ci-dessous proviennent directement des captures `olympe.jpg`,
+`jouer.jpg`, `boutique.jpg`, `passe_de_combat.jpg` et `quetes.jpg`. Ils n'ont
+pas été redessinés : leurs pixels utiles sont recadrés depuis les JPEG, puis le
+fond est converti en transparence.
+
+**Aucun texte ni chiffre n'est conservé dans ces PNG.** Les plaques marquées
+`-blank` gardent seulement leur matière et leur bordure ; leur libellé, leur
+prix et leur quantité doivent être rendus par le code pour rester
+traduisibles.
+
+| Famille | Fichiers |
+| --- | --- |
+| Divinités | `portrait-athena.png`, `portrait-poseidon.png`, `portrait-artemis.png`, `character-zeus.png`, `character-artemis-archer.png`, `character-poseidon-trident.png` |
+| Capacités et navigation | `ability-foudre-active.png`, `ability-foudre-passive.png`, `ability-foudre-tile.png`, `arrow-left.png`, `arrow-right.png`, `league-eagle.png`, `weekly-hourglass.png` |
+| Scènes et boutique | `chimera.png`, `offer-starter-characters.png`, `conversion-amphora.png` |
+| Plaques vierges | `button-claim-blank.png`, `button-continue-blank.png`, `button-go-blank.png`, `button-gold-small-blank.png`, `button-match-blank.png`, `button-pass-blank.png`, `button-price-blank.png`, `button-price-small-blank.png`, `button-stone-small-blank.png` |
+| Récompenses | `reward-chest-red.png`, `reward-chest-silver.png`, `reward-chest-wood.png`, `reward-crown.png`, `reward-gem-blue.png`, `reward-gold-pile.png`, `reward-gold-sack.png`, `reward-gold-shard.png`, `reward-ingots.png`, `reward-key.png`, `reward-lightning-blue.png`, `reward-medusa-chibi.png`, `reward-medusa-head.png`, `reward-money-bag.png`, `reward-potion-gold.png`, `reward-potion-green.png`, `reward-potion-pink.png`, `reward-ticket.png`, `reward-zeus-card.png` |
+
+Athéna et Poséidon sont déclarés dans `PORTRAITS`; l'aigle, l'offre et
+l'amphore dans `ART`; les récompenses utilisées par le passe dans
+`PASS_REWARD_ART`. Artémis reste disponible comme asset de référence mais
+n'est pas branchée au roster actuel, qui contient Aphrodite à sa place.
+
 ## Ce sont des PNG, et c'est le sujet
 
 Les sources vivent dans `images/`, en JPEG, sur un damier gris. **Ce damier

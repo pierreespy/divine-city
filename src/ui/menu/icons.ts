@@ -77,6 +77,22 @@ export const ART = {
   course: require('../../../assets/ui/course.png') as ImageSourcePropType,
   /** Les combattants sous l'orage, sur la carte de l'arène. */
   arene: require('../../../assets/ui/arene.png') as ImageSourcePropType,
+  /** L'aigle d'argent du rang, isolé du bandeau Jouer. */
+  leagueEagle: require('../../../assets/ui/league-eagle.png') as ImageSourcePropType,
+  /** Zeus et Hadès devant la foudre, sans le texte de l'offre. */
+  starterOffer: require('../../../assets/ui/offer-starter-characters.png') as ImageSourcePropType,
+  /** L'amphore d'or de la conversion, sans prix ni légende. */
+  conversionAmphora: require('../../../assets/ui/conversion-amphora.png') as ImageSourcePropType,
+} as const;
+
+/** Récompenses du passe, extraites sans nombre ni libellé. */
+export const PASS_REWARD_ART = {
+  crown: require('../../../assets/ui/reward-crown.png') as ImageSourcePropType,
+  key: require('../../../assets/ui/reward-key.png') as ImageSourcePropType,
+  chest: require('../../../assets/ui/reward-chest-wood.png') as ImageSourcePropType,
+  potion: require('../../../assets/ui/reward-potion-gold.png') as ImageSourcePropType,
+  purse: require('../../../assets/ui/reward-money-bag.png') as ImageSourcePropType,
+  gold: require('../../../assets/ui/reward-gold-sack.png') as ImageSourcePropType,
 } as const;
 
 /**
@@ -102,15 +118,15 @@ export const DISTRICT_ICONS: Partial<Record<DistrictId, ImageSourcePropType>> = 
 /**
  * Le portrait d'une divinité, pour le médaillon du bandeau supérieur.
  *
- * ⚠️ La table est PARTIELLE, et c'est voulu : seul Zeus est dessiné. Les six
+ * ⚠️ La table reste PARTIELLE : Zeus, Athéna et Poséidon sont dessinés. Les
  * autres gardent la pastille de leurs deux couleurs, qui a l'avantage d'être
  * EXACTE — elle lit la parure équipée, donc elle montre ce que le joueur
- * verra en jeu. Un portrait par dieu la remplacera quand les six existeront ;
- * en attendant, mieux vaut un seul portrait vrai que sept pastilles pour un
- * dieu qui, lui, a son visage.
+ * verra en jeu. Un portrait par dieu la remplacera quand sa source existera.
  */
 export const PORTRAITS: Partial<Record<CharacterId, ImageSourcePropType>> = {
   zeus: require('../../../assets/ui/zeus.png') as ImageSourcePropType,
+  athena: require('../../../assets/ui/portrait-athena.png') as ImageSourcePropType,
+  poseidon: require('../../../assets/ui/portrait-poseidon.png') as ImageSourcePropType,
 };
 
 /**
