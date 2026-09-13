@@ -25,7 +25,7 @@ import {
   type ViewStyle,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { ART, ICONS } from './icons';
+import { ART, BLANK_PLATE, ICONS } from './icons';
 import { COLORS, FONTS, RADIUS, SPACE, TEXT_SHADOW, TOUCH_MIN, TYPE, hex } from './theme';
 
 /* ------------------------------------------------------------------ cadres */
@@ -193,6 +193,11 @@ export function Button({
   size = 'normal',
 }: ButtonProps) {
   const [light, deep, edge, edgeBottom, ink] = BUTTON_TONES[variant];
+  // ⚠️ L'or n'est plus PEINT mais GRAVÉ : `bouton-simple.png` porte déjà son
+  // cadre de bronze, ses rivets et son bombé. Le contour dessiné ci-dessous
+  // n'a donc plus lieu d'être sur cette matière — posé par-dessus, il ferait
+  // un second cadre autour du premier (même règle que `Plate`).
+  const engraved = variant === 'primary';
   return (
     <Pressable
       testID={testID}
@@ -207,17 +212,34 @@ export function Button({
       hitSlop={size === 'small' ? 10 : 0}
       style={({ pressed }) => [
         styles.button,
-        { borderColor: edge, borderBottomColor: edgeBottom },
+        engraved
+          ? styles.buttonEngraved
+          : { borderColor: edge, borderBottomColor: edgeBottom },
         size === 'big' && styles.buttonBig,
         size === 'small' && styles.buttonSmall,
-        pressed && !disabled && styles.buttonPressed,
-        disabled && styles.buttonDisabled,
+        pressed && !disabled && (engraved ? styles.platePressed : styles.buttonPressed),
+        disabled && (engraved ? styles.plateDisabled : styles.buttonDisabled),
         style,
       ]}
     >
-      {/* Le dégradé fait le bombé : clair en haut, foncé en bas. Une couleur
-          plate donnerait un rectangle, pas un objet qu'on presse. */}
-      <LinearGradient pointerEvents="none" colors={[light, deep]} style={StyleSheet.absoluteFill} />
+      {engraved ? (
+        // ⚠️ `width`/`height` à 100 % EN PLUS des insets : `absoluteFill`
+        // seul laisse react-native-web retomber sur la taille naturelle de
+        // l'image tant que la sienne n'est pas posée (même piège que
+        // `SkinCard`). `resizeMode` en prop autant qu'en style : le style
+        // seul ne traverse pas jusqu'à l'image sur iOS.
+        <Image
+          source={BLANK_PLATE}
+          resizeMode="stretch"
+          style={[StyleSheet.absoluteFill, styles.buttonFace]}
+          accessible={false}
+          importantForAccessibility="no"
+        />
+      ) : (
+        /* Le dégradé fait le bombé : clair en haut, foncé en bas. Une couleur
+           plate donnerait un rectangle, pas un objet qu'on presse. */
+        <LinearGradient pointerEvents="none" colors={[light, deep]} style={StyleSheet.absoluteFill} />
+      )}
       <Text
         style={[
           styles.buttonLabel,
@@ -225,7 +247,12 @@ export function Button({
           size === 'big' && styles.buttonLabelBig,
           size === 'small' && styles.buttonLabelSmall,
         ]}
-        numberOfLines={1}
+        // ⚠️ DEUX lignes sur le bouton d'appel, une seule ailleurs. Sa plaque
+        // gravée réserve ses deux bouts en biseau (voir `buttonEngraved`), et
+        // l'intitulé le plus long de l'écran — « ACTIVER LA VOIE DIVINE » —
+        // ne tient plus entre eux sur un téléphone étroit. Replié, il se lit
+        // en entier ; sur une seule ligne il finissait en « VOIE DIVI… ».
+        numberOfLines={size === 'big' ? 2 : 1}
         // Un bouton étroit ne doit pas TRONQUER son intitulé : « RÉCUPÉ… »
         // ne veut rien dire. Il rétrécit la lettre plutôt que de la couper.
         adjustsFontSizeToFit
@@ -628,6 +655,33 @@ const styles = StyleSheet.create({
     borderBottomWidth: 4,
     overflow: 'hidden',
   },
+  // La plaque gravée porte SON cadre : ni bordure ni rognage ici, et pas de
+  // coins arrondis — les siens sont dessinés, et un `borderRadius` par-dessus
+  // viendrait mordre sur ses rivets, qui débordent des angles.
+  // ⚠️ `borderBottomWidth` doit être remis à zéro NOMMÉMENT : `borderWidth: 0`
+  // ne l'écrase pas — les deux sont des propriétés distinctes, et la plus
+  // précise, posée plus haut par `styles.button`, survit. Laissé tel quel, le
+  // chant reste à quatre points et, sans couleur de matière, se dessine en
+  // NOIR sous la plaque : une barre sombre en travers du bouton d'or.
+  buttonEngraved: {
+    borderWidth: 0,
+    borderBottomWidth: 0,
+    borderRadius: 0,
+    // ⚠️ Les marges sont en POURCENTAGE, pas en points : la plaque est
+    // étirée à la largeur du bouton, donc son cadre de bronze et ses deux
+    // bouts en biseau occupent toujours la même FRACTION, jamais le même
+    // nombre de points. Sa face d'or court de 4 % à 96 % ; 9 % de chaque
+    // côté laisse le texte dessus, à l'écart des biseaux.
+    paddingHorizontal: '9%',
+    // Le même écart en haut et en bas, mais EN POINTS : le biseau horizontal
+    // de la plaque ne fait que dix points de haut quelle que soit la taille
+    // du bouton, et une marge en pourcentage se mesurerait de toute façon
+    // sur la LARGEUR du parent — pas sur celle qu'on veut ici. Sans elle, la
+    // seconde ligne d'un intitulé replié, ou le prix posé dessous, débordait
+    // de la face d'or sur le cadre de bronze.
+    paddingVertical: 10,
+  },
+  buttonFace: { width: '100%', height: '100%' },
   buttonBig: { minHeight: 62 },
   // ⚠️ Il passe SOUS les 44 points de `TOUCH_MIN` : c'est le `hitSlop` du
   // bouton qui rend la différence, et lui seul en a besoin — les autres
@@ -643,6 +697,8 @@ const styles = StyleSheet.create({
   // La plaque ne porte ni fond ni bordure : son cadre est dessiné dans
   // l'image. Lui en ajouter un poserait un second cadre autour du premier.
   plate: { minHeight: TOUCH_MIN, alignItems: 'center', justifyContent: 'center' },
+  // Partagé avec le `Button` d'or, qui porte la même plaque : une plaque
+  // gravée s'enfonce, elle ne perd pas un chant qu'elle n'a jamais dessiné.
   platePressed: { transform: [{ translateY: 3 }] },
   // Éteinte, mais LISIBLE : le 0,45 des boutons de bois efface le relief
   // gravé d'une plaque, et il n'en reste qu'une tache pâle.

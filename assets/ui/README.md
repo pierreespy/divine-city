@@ -27,12 +27,45 @@ README voisin explique comment le remplacer.
 | `ligue.png` | Le cadre du bandeau de **ligue**, et le titre de la carte de la course |
 | `course.png` | Le bandeau peint de la carte **La course sacrée** |
 | `arene.png` | Le bandeau peint de la carte **Arène en ligne** |
+| `case-lauriers.png` | Le cadre d'un **paquet de lauriers**, en boutique |
+| `bouton-simple.png` | La face du **bouton d'or** (`Button variant="primary"`) |
+| `case-skins.png` | Rien encore — voir « Un cadre détouré, et pas encore posé » |
 
 Les quatre médaillons sont appariés par **sujet**, pas par rang : la vague va
 au Port, les pins au Bois sacré, le volcan à l'Acropole, et les colonnes à
 l'Agora — le seul quartier à colonnade (voir `world/districts.ts`). L'ordre à
 l'écran suit le niveau qui ouvre chaque étape, et peut changer sans que ces
 couples bougent.
+
+## Les deux cadres de la boutique
+
+`case-lauriers.png` et `case-skins.png` sortent du même gabarit que les quatre
+cadres de rareté (`Case_*.png`) : une plaque d'or en bas, un panneau au-dessus.
+Ils s'en séparent sur un point, et c'est celui qui compte — leur panneau est du
+PARCHEMIN, pas une teinte de rareté.
+
+`case-lauriers.png` est le gabarit COUCHÉ, la couronne gravée en haut à gauche
+et la plaque en travers du bas. C'est le cadre d'un paquet de lauriers
+(`LaurelPackCard`, dans `ShopTab`) : le montant se pose à droite de la couronne,
+le prix en euros sur la plaque.
+
+⚠️ Sa couronne est **dans les pixels**. Ce cadre ne peut donc porter qu'un
+montant EN LAURIERS — un prix en or à côté d'elle ferait deux monnaies sur une
+même carte, et la carte mentirait sur ce qu'elle vend.
+
+### Un cadre détouré, et pas encore posé
+
+`case-skins.png` est le même gabarit DEBOUT, couronne sur la plaque. Il est
+détouré et empaqueté, mais aucun écran ne l'affiche, et ce n'est pas un oubli :
+
+- une parure a toujours une rareté, et les quatre `Case_*.png` la DISENT. Poser
+  le cadre neutre à leur place échangerait un renseignement contre une
+  décoration ;
+- une divinité, elle, n'a pas de rareté — mais elle s'achète en OR, et la
+  couronne gravée sur la plaque en ferait un prix en lauriers.
+
+Il attend donc ce que la maquette appelle une « capacité » : un objet sans
+rareté, payé en lauriers. Le jour où il existera, le cadre est prêt.
 
 ## Ce sont des PNG, et c'est le sujet
 
@@ -148,4 +181,12 @@ python3 tools/detourer.py "images/arene en ligne.jpg"  assets/ui/arene.png     8
     --recadre 108,116,918,348
 python3 tools/detourer.py "images/épopée sacrée.jpg"   assets/ui/course.png    860x860 \
     --recadre 86,176,942,304
+python3 tools/detourer.py "images/case lauriers.png"   assets/ui/case-lauriers.png 512x512
+python3 tools/detourer.py "images/case skins.png"      assets/ui/case-skins.png    512x512
+python3 tools/detourer.py "images/bouton simple.png"   assets/ui/bouton-simple.png 768x768 \
+    --fond 30
 ```
+
+`--fond` est le mode des sources SANS damier : `bouton simple.png` est posé sur
+un aplat brun, où il n'y a rien qui alterne et donc rien à reconnaître. Le
+script y retire la couleur du fond, lue sur les bords. Voir `tools/detourer.py`.

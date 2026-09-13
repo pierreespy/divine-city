@@ -16,6 +16,13 @@ et que l'application, elle, calcule :
     python3 tools/detourer.py "images/arene en ligne.jpg" assets/ui/arene.png \
         800x800 --recadre 108,116,918,348
 
+Enfin, une source peut n'avoir aucun damier du tout : `bouton simple.png` est
+posé sur un APLAT brun. Il n'y a alors rien qui alterne, donc rien à
+reconnaître — on retire la couleur du fond, lue sur les bords :
+
+    python3 tools/detourer.py "images/bouton simple.png" \
+        assets/ui/bouton-simple.png 768x768 --fond 30
+
 ⚠️ Ce script ne fait PAS partie de l'application : il ne tourne ni au
 lancement ni à la construction, et rien dans `src/` ne l'importe. Il sert une
 fois, à la main, quand une image de travail entre dans `assets/ui/`. Il demande
@@ -183,6 +190,30 @@ def enclosed_seeds(lum, flat, tones, cell, tol):
     return seeds
 
 
+def plain_ground(rgb, tol):
+    """Le terrain d'un fond UNI, reconnu à sa couleur plutôt qu'à son alternance.
+
+    ⚠️ C'est l'autre famille de sources, et elle ne se détoure pas comme la
+    première : `bouton simple.png` n'est pas posé sur un damier mais sur un
+    APLAT — un brun sourd, une seule couleur sur toute l'image. L'analyse par
+    alternance n'y voit donc rien à reconnaître, et `border_tones` s'arrête
+    d'ailleurs net sur « un seul ton : image déjà détourée ? ».
+
+    La couleur est LUE sur les bords, jamais écrite en dur : le prochain aplat
+    ne sera pas ce brun-là, et une valeur en dur ne détourerait que ce
+    fichier-ci. On prend la médiane d'une bande de bord, ce qui survit à un
+    coin de dessin qui mordrait dessus.
+
+    Reste la prudence commune aux deux modes : ce masque n'est qu'un TERRAIN,
+    et l'inondation de `run` ne retire qu'un pixel RELIÉ au bord. Un aplat du
+    sujet de la même couleur survit tant qu'aucun chemin ne mène jusqu'à lui.
+    """
+    band = np.concatenate([rgb[:3].reshape(-1, 3), rgb[-3:].reshape(-1, 3),
+                           rgb[:, :3].reshape(-1, 3), rgb[:, -3:].reshape(-1, 3)])
+    ground = np.median(band, axis=0)
+    return np.abs(rgb.astype(int) - ground).max(axis=2) <= tol, tuple(int(v) for v in ground)
+
+
 def clip_circle(alpha, spec):
     """Ne garde que l'intérieur d'un cercle donné — `cx,cy,r` en pixels source.
 
@@ -203,7 +234,7 @@ def clip_circle(alpha, spec):
     return Image.fromarray((np.asarray(alpha) * inside).astype(np.uint8))
 
 
-def run(src, dst, box=None, circle=None, crop=None):
+def run(src, dst, box=None, circle=None, crop=None, ground=None):
     im = Image.open(src).convert('RGB')
 
     if crop is not None:
@@ -222,19 +253,26 @@ def run(src, dst, box=None, circle=None, crop=None):
     lum = np.asarray(im.convert('L'))
     h, w = lum.shape
 
-    tones, tol = border_tones(rgb)
-    px = im.load()
-    cell = max(4, round(max(period(px, min(w, 400), lambda i: px[i, 2]),
-                            period(px, min(h, 400), lambda i: px[2, i]))))
+    if ground is not None:
+        # Fond UNI : rien n'alterne, donc rien des lignes ci-dessous ne
+        # s'applique. On pose le terrain d'un coup et on saute l'analyse.
+        passable, tint = plain_ground(rgb, int(ground))
+        legend = f'fond uni {tint} ±{int(ground)}'
+    else:
+        tones, tol = border_tones(rgb)
+        px = im.load()
+        cell = max(4, round(max(period(px, min(w, 400), lambda i: px[i, 2]),
+                                period(px, min(h, 400), lambda i: px[2, i]))))
 
-    #: Neutre : sans teinte. Vrai du damier nu, faux sous le halo doré.
-    flat = np.ptp(rgb, axis=2) <= SPREAD
-    plain = flat & ((np.abs(lum.astype(int) - tones[0]) <= tol)
-                    | (np.abs(lum.astype(int) - tones[1]) <= tol))
+        #: Neutre : sans teinte. Vrai du damier nu, faux sous le halo doré.
+        flat = np.ptp(rgb, axis=2) <= SPREAD
+        plain = flat & ((np.abs(lum.astype(int) - tones[0]) <= tol)
+                        | (np.abs(lum.astype(int) - tones[1]) <= tol))
 
-    # Le terrain que l'inondation a le droit de traverser : le damier nu, plus
-    # tout bloc reconnu comme damé avec ses propres tons (donc le halo).
-    passable = plain | checkered_blocks(rgb, lum, cell, tol)
+        # Le terrain que l'inondation a le droit de traverser : le damier nu,
+        # plus tout bloc reconnu comme damé avec ses propres tons (le halo).
+        passable = plain | checkered_blocks(rgb, lum, cell, tol)
+        legend = f'tons {tones[1]}/{tones[0]} ±{tol} au pas {cell}'
 
     seeds = deque()
     seen = np.zeros((h, w), dtype=bool)
@@ -250,8 +288,11 @@ def run(src, dst, box=None, circle=None, crop=None):
     for y in range(h):
         push(0, y)
         push(w - 1, y)
-    for y, x in np.argwhere(enclosed_seeds(lum, flat, tones, cell, tol)):
-        push(int(x), int(y))
+    if ground is None:
+        # Une zone enfermée par le sujet n'est reliée à aucun bord. Sur un
+        # fond uni elle n'existe pas : il n'y a pas d'alternance à y lire.
+        for y, x in np.argwhere(enclosed_seeds(lum, flat, tones, cell, tol)):
+            push(int(x), int(y))
 
     while seeds:
         x, y = seeds.popleft()
@@ -282,13 +323,12 @@ def run(src, dst, box=None, circle=None, crop=None):
     if box:
         out.thumbnail(box, Image.LANCZOS)
     out.save(dst, 'PNG', optimize=True)
-    print(f'{dst}  {out.size[0]}x{out.size[1]}  '
-          f'tons {tones[1]}/{tones[0]} ±{tol} au pas {cell}')
+    print(f'{dst}  {out.size[0]}x{out.size[1]}  {legend}')
 
 
 if __name__ == '__main__':
     a = sys.argv[1:]
-    circle = crop = None
+    circle = crop = ground = None
     if '--cercle' in a:
         i = a.index('--cercle')
         circle = a[i + 1]
@@ -297,5 +337,9 @@ if __name__ == '__main__':
         i = a.index('--recadre')
         crop = a[i + 1]
         a = a[:i] + a[i + 2:]
+    if '--fond' in a:
+        i = a.index('--fond')
+        ground = a[i + 1]
+        a = a[:i] + a[i + 2:]
     size = tuple(int(v) for v in a[2].split('x')) if len(a) > 2 else None
-    run(a[0], a[1], size, circle, crop)
+    run(a[0], a[1], size, circle, crop, ground)

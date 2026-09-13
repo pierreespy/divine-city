@@ -77,6 +77,16 @@ export const ART = {
   course: require('../../../assets/ui/course.png') as ImageSourcePropType,
   /** Les combattants sous l'orage, sur la carte de l'arène. */
   arene: require('../../../assets/ui/arene.png') as ImageSourcePropType,
+  /**
+   * Le cadre d'un paquet de lauriers : une couronne GRAVÉE en haut à gauche,
+   * une plaque d'or en bas. Le même gabarit que les cadres de rareté, couché.
+   *
+   * ⚠️ La couronne est dans les pixels. Ce cadre ne peut donc porter qu'un
+   * montant EN LAURIERS — y poser un prix en or mentirait, et `Coin` à côté
+   * d'elle ferait deux monnaies sur une même carte. Ses repères sont mesurés
+   * dans `LaurelPackCard` (voir `ShopTab`).
+   */
+  caseLauriers: require('../../../assets/ui/case-lauriers.png') as ImageSourcePropType,
 } as const;
 
 /**
@@ -134,6 +144,20 @@ export const RARITY_FRAMES: Readonly<Record<SkinRarity, ImageSourcePropType>> = 
  * joueur, et aucun `label` ne viendrait corriger l'image. C'est pourquoi
  * elles sont séparées des icônes ci-dessus, qui, elles, vont partout.
  */
+/**
+ * La plaque d'or NUE : le même objet gravé que `PLATES`, mais sans lettres.
+ *
+ * ⚠️ C'est ce qui la rend réutilisable là où les autres ne le sont pas. Son
+ * cadre de bronze, ses deux rivets et son bombé sont dessinés ; l'intitulé,
+ * lui, est posé par-dessus au rendu. Elle sert de face au `Button` d'or
+ * (`variant="primary"`), qui la porte donc partout où une action se joue.
+ *
+ * Elle s'étire (`resizeMode="stretch"`), au contraire de `PLATES` : un
+ * libellé ne connaît pas sa largeur d'avance, et une plaque `contain`
+ * flotterait au milieu d'un bouton plus large qu'elle.
+ */
+export const BLANK_PLATE = require('../../../assets/ui/bouton-simple.png') as ImageSourcePropType;
+
 export const PLATES = {
   /** « TROUVER MATCH » — l'appel de l'arène en ligne. */
   match: require('../../../assets/ui/bouton-match.png') as ImageSourcePropType,

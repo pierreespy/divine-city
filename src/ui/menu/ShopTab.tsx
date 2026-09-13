@@ -22,7 +22,7 @@
  * parure porte donc toujours l'icône du laurier, jamais celle de l'or.
  */
 
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { CHARACTER_ORDER, characterById, type CharacterId } from '../../entities/characters/roster';
 import { characterPrice, ownsCharacter, ownsSkin, type Progression } from '../../meta/progression';
 import {
@@ -33,9 +33,10 @@ import {
   type LaurelPack,
   type Skin,
 } from '../../meta/store';
+import { ART } from './icons';
 import { Button, Card, Coin, GodBadge, Laurel, SectionTitle } from './parts';
 import { SkinCard } from './SkinCard';
-import { COLORS, RADIUS, SPACE, TYPE } from './theme';
+import { COLORS, SPACE, TYPE } from './theme';
 
 /**
  * Le rayon des parures est une VITRINE QUI DÉFILE : une carte en plein
@@ -51,6 +52,73 @@ function shopSkins(state: Progression): Skin[] {
 }
 
 const SKIN_CARD_WIDTH = 220;
+/** Une carte et demie dans le cadre : le paquet d'appel, et qu'il y en a d'autres. */
+const PACK_CARD_WIDTH = 158;
+
+/**
+ * Le cadre d'un paquet de lauriers, et les deux repères posés dessus.
+ *
+ * ⚠️ Ils sont MESURÉS sur `case-lauriers.png` (512 × 469), en fractions de
+ * la carte, et ne bougent qu'avec le dessin : la couronne est GRAVÉE en haut
+ * à gauche, la plaque d'or occupe le bas. Le montant se pose à droite de la
+ * couronne — jamais un second `Laurel` à côté de lui, le cadre en porte
+ * déjà un — et le prix en euros sur la plaque.
+ */
+const PACK_ASPECT = 512 / 469;
+/** À droite de la couronne gravée, qui s'arrête à 42,8 % de la largeur. */
+const PACK_AMOUNT = { left: '45%', right: '6%', top: '30%', height: '22%' } as const;
+/** La face de la plaque d'or, mesurée entre ses deux rivets. */
+const PACK_PRICE = { left: '11.5%', right: '8.6%', top: '64.2%', bottom: '12.6%' } as const;
+
+/**
+ * Un paquet de lauriers : le cadre gravé, son montant et son prix.
+ *
+ * ⚠️ La plaque d'or EST le bouton d'achat — comme sur la carte d'une parure
+ * (`SkinCard`). Un bouton de bois posé sous la carte ferait deux objets
+ * pressables pour un seul achat, et le joueur toucherait le mauvais.
+ *
+ * ⚠️ Elle est INERTE (M46) : un achat en argent réel demande un compte
+ * marchand. Le prix reste affiché — c'est lui qui décide de la place que la
+ * carte occupera — mais rien ne se passe au toucher.
+ */
+function LaurelPackCard({ pack, width }: { pack: LaurelPack; width: number }) {
+  // Une hauteur EN POINTS, pas `aspectRatio` : les repères ci-dessus sont
+  // posés en pourcentages, qui ont besoin d'une hauteur déjà connue.
+  const height = width / PACK_ASPECT;
+  return (
+    <View style={{ width, height }}>
+      <Image
+        source={ART.caseLauriers}
+        resizeMode="stretch"
+        // `width`/`height` à 100 % EN PLUS des insets : sans elles,
+        // react-native-web retombe sur la taille naturelle de l'image.
+        style={[StyleSheet.absoluteFill, styles.packFrame]}
+        accessible={false}
+        importantForAccessibility="no"
+      />
+      <View style={[styles.packAmountSpot, PACK_AMOUNT]}>
+        <Text style={styles.packAmount} numberOfLines={1} adjustsFontSizeToFit>
+          {pack.laurels.toLocaleString('fr-FR')}
+        </Text>
+      </View>
+      <Pressable
+        onPress={() => undefined}
+        disabled
+        accessibilityRole="button"
+        accessibilityLabel={`${pack.laurels} lauriers pour ${pack.price}`}
+        accessibilityState={{ disabled: true }}
+        style={[styles.packPriceSpot, PACK_PRICE]}
+      >
+        {/* Éteint comme le prix d'une parure hors de portée : le prix reste
+            LISIBLE — c'est lui qui décide de la place de la carte — mais son
+            encre dit qu'il ne se touche pas encore. */}
+        <Text style={[styles.packPrice, styles.packPriceOff]} numberOfLines={1} adjustsFontSizeToFit>
+          {pack.price}
+        </Text>
+      </Pressable>
+    </View>
+  );
+}
 
 /** Les trois paliers montrés en rayon : l'appel, le courant, le mis en avant. */
 const SHOP_LAUREL_PACK_IDS = ['petit', 'moyen', 'genereux'] as const;
@@ -102,16 +170,22 @@ export function ShopTab({ state, onBuyCharacter, onBuySkin }: Props) {
           côte à côte, et au-delà de trois une case n'est plus assez large
           pour porter son montant. Les paliers intermédiaires restent dans
           `LAUREL_PACKS` — ils serviront à une page de paquets à part. */}
-      <View style={styles.packRow}>
+      {/* La rangée glisse à l'horizontale : les cadres gravés ne se laissent
+          pas tasser à un tiers d'écran sans que leur couronne et leur plaque
+          deviennent illisibles. Une carte et demie tient dans le cadre, ce
+          qui montre à la fois le paquet d'appel et qu'il y en a d'autres. */}
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        snapToInterval={PACK_CARD_WIDTH + SPACE.md}
+        decelerationRate="fast"
+        contentContainerStyle={styles.packRail}
+        nestedScrollEnabled
+      >
         {shopLaurelPacks().map((pack) => (
-          <View key={pack.id} style={[styles.pack, pack.featured && styles.packOn]}>
-            <Laurel size={26} />
-            <Text style={styles.packAmount}>{pack.laurels.toLocaleString('fr-FR')}</Text>
-            <Text style={styles.packLabel}>lauriers</Text>
-            <Button label={pack.price} onPress={() => undefined} disabled style={styles.packButton} />
-          </View>
+          <LaurelPackCard key={pack.id} pack={pack} width={PACK_CARD_WIDTH} />
         ))}
-      </View>
+      </ScrollView>
 
       {characters.length > 0 && (
         <>
@@ -233,24 +307,19 @@ const styles = StyleSheet.create({
   offerName: { ...TYPE.label, fontSize: 11, color: COLORS.text },
   offerDetail: { ...TYPE.body, fontSize: 12, color: COLORS.muted, marginTop: 2, lineHeight: 17 },
 
-  packRow: { flexDirection: 'row', gap: SPACE.sm },
-  pack: {
-    flex: 1,
-    alignItems: 'center',
-    gap: 2,
-    paddingVertical: SPACE.md,
-    paddingHorizontal: SPACE.xs,
-    borderRadius: RADIUS.md,
-    borderWidth: 2,
-    borderBottomWidth: 4,
-    borderColor: COLORS.frame,
-    borderBottomColor: COLORS.frameDark,
-    backgroundColor: COLORS.panel,
-  },
-  packOn: { borderColor: COLORS.borderStrong, backgroundColor: COLORS.panelRaised },
-  packAmount: { ...TYPE.price, color: COLORS.text, marginTop: SPACE.xs },
-  packLabel: { ...TYPE.body, fontSize: 11, color: COLORS.muted },
-  packButton: { alignSelf: 'stretch', marginTop: SPACE.sm, minHeight: 36 },
+  packRail: { gap: SPACE.md, paddingHorizontal: SPACE.sm },
+  packFrame: { width: '100%', height: '100%' },
+  // Le montant est CALÉ À GAUCHE, au bord droit de la couronne gravée : il
+  // part donc du même point qu'il ait trois chiffres ou quatre. Centré,
+  // « 100 » et « 2 500 » flottaient chacun à leur façon.
+  packAmountSpot: { position: 'absolute', justifyContent: 'center' },
+  packAmount: { ...TYPE.price, fontSize: 22, lineHeight: 26, color: COLORS.text },
+  // Le prix, lui, est CENTRÉ : la plaque est un objet symétrique, entre deux
+  // rivets, et un prix rangé à gauche y laisserait un vide à droite.
+  packPriceSpot: { position: 'absolute', alignItems: 'center', justifyContent: 'center' },
+  // Encre sombre sur l'or de la plaque, jamais le texte gravé clair.
+  packPrice: { ...TYPE.price, fontSize: 18, lineHeight: 22, color: COLORS.onGold },
+  packPriceOff: { color: COLORS.muted },
 
   row: { flexDirection: 'row', alignItems: 'center', gap: SPACE.md },
   rowText: { flex: 1, minWidth: 0 },

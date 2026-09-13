@@ -1,7 +1,7 @@
 import { Asset } from 'expo-asset';
 
 import { purchasableSkins } from '../../meta/store';
-import { ART, DISTRICT_ICONS, ICONS, PLATES, PORTRAITS, RARITY_FRAMES } from './icons';
+import { ART, BLANK_PLATE, DISTRICT_ICONS, ICONS, PLATES, PORTRAITS, RARITY_FRAMES } from './icons';
 
 /** Les deux décors du ruban, partagés avec `MenuScreen`. */
 export const MENU_WALLPAPERS = {
@@ -25,6 +25,11 @@ const MENU_ASSETS = [
   ...Object.values(PORTRAITS),
   ...Object.values(PLATES),
   ...Object.values(RARITY_FRAMES),
+  // ⚠️ Une image SEULE, pas une table : elle se cite donc à part, et s'oublie
+  // d'autant plus facilement. Sans elle, le bouton d'appel de chaque onglet
+  // s'affiche nu le temps que sa plaque arrive — le seul bouton de l'écran
+  // qu'on ne peut pas rater.
+  BLANK_PLATE,
   ...Object.values(MENU_WALLPAPERS),
   ...purchasableSkins().flatMap((skin) => (skin.preview === undefined ? [] : [skin.preview])),
 ] as AssetModule[];
