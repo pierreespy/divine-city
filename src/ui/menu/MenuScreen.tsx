@@ -297,7 +297,7 @@ export function MenuScreen({
             </Page>
 
             <Page width={pageWidth} height={naveHeight} framed title="Boutique">
-              <ShopTab state={state} onBuyCharacter={onBuyCharacter} onBuySkin={onBuySkin} />
+              <ShopTab state={state} onBuySkin={onBuySkin} />
             </Page>
           </Animated.ScrollView>
         </View>

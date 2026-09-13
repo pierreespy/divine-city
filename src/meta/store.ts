@@ -331,6 +331,14 @@ export const GOLD_PACKS: readonly GoldPack[] = [
  * d'unités, prix plus élevé), pas la même chose sous un autre nom — un
  * champ `gold` partagé pour les deux aurait été trompeur à relire.
  *
+ * ⚠️ SIX paliers, et c'est la boutique qui le demande : son rayon les pose
+ * en grille de deux colonnes sur trois rangées, et une grille à trou se
+ * remarque plus qu'une case de moins. Le sixième — `colossal` — prolonge la
+ * courbe de générosité vers le haut : 101 lauriers par euro au premier
+ * palier, 130 au dernier. C'est la forme habituelle d'une échelle de
+ * paquets, et elle dit quelque chose de vrai — acheter gros revient moins
+ * cher à l'unité.
+ *
  * ⚠️ INERTS, comme `GOLD_PACKS` : même raison (M46), voir plus haut.
  */
 export interface LaurelPack {
@@ -346,4 +354,5 @@ export const LAUREL_PACKS: readonly LaurelPack[] = [
   { id: 'grand', laurels: 850, price: '7,99 €', featured: false },
   { id: 'genereux', laurels: 1250, price: '11,99 €', featured: true },
   { id: 'ultime', laurels: 3000, price: '24,99 €', featured: false },
+  { id: 'colossal', laurels: 6500, price: '49,99 €', featured: false },
 ];

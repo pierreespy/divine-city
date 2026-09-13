@@ -1,10 +1,14 @@
 /**
  * ShopTab.tsx — la boutique.
  *
- * Quatre rayons, dans cet ordre : l'offre du jour (celle qui rapporte), les
- * lauriers, les divinités et leurs parures, et enfin la conversion de
- * l'or en lauriers — la seule opération que le joueur peut réellement
- * faire aujourd'hui.
+ * Trois rayons, dans cet ordre : l'offre du jour (celle qui rapporte), les
+ * paquets de lauriers, et les parures.
+ *
+ * ⚠️ La boutique ne vend PAS de divinité, et ce n'est pas un oubli. Une
+ * divinité s'achète sur sa propre fiche, à l'Olympe (`OlympeTab`), là où le
+ * joueur voit ce qu'elle sait faire avant d'y mettre son or — une ligne de
+ * liste avec un nom et un prix ne le lui disait pas. Le seul chemin d'achat
+ * est donc celui qui renseigne.
  *
  * ⚠️ Un rayon n'affiche jamais ce que le joueur possède déjà. Un magasin qui
  * montre des cases barrées ne donne pas envie d'acheter, il donne envie de
@@ -18,13 +22,13 @@
  *
  * ⚠️ Les parures ont quatre raretés (mortel, héros, titan, olympien), mais
  * une seule monnaie : le laurier. Seule la parure d'origine (mortelle) est
- * gratuite. L'or, lui, n'achète plus que les divinités — le prix d'une
- * parure porte donc toujours l'icône du laurier, jamais celle de l'or.
+ * gratuite. L'or n'achète que les divinités, et elles sont à l'Olympe : rien
+ * ici ne se paie en or, et aucun prix de ce fichier ne porte son icône.
  */
 
 import { Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { CHARACTER_ORDER, characterById, type CharacterId } from '../../entities/characters/roster';
-import { characterPrice, ownsCharacter, ownsSkin, type Progression } from '../../meta/progression';
+import { characterById } from '../../entities/characters/roster';
+import { ownsCharacter, ownsSkin, type Progression } from '../../meta/progression';
 import {
   GOLD_PACKS,
   LAUREL_PACKS,
@@ -34,7 +38,7 @@ import {
   type Skin,
 } from '../../meta/store';
 import { ART } from './icons';
-import { Button, Card, Coin, GodBadge, Laurel, SectionTitle } from './parts';
+import { Button, Card, SectionTitle } from './parts';
 import { SkinCard } from './SkinCard';
 import { COLORS, SPACE, TYPE } from './theme';
 
@@ -52,8 +56,32 @@ function shopSkins(state: Progression): Skin[] {
 }
 
 const SKIN_CARD_WIDTH = 220;
-/** Une carte et demie dans le cadre : le paquet d'appel, et qu'il y en a d'autres. */
-const PACK_CARD_WIDTH = 158;
+
+/**
+ * La grille des paquets : DEUX colonnes, donc trois rangées pour les six
+ * paliers du catalogue.
+ *
+ * ⚠️ Deux, pas trois. Le cadre d'un paquet est COUCHÉ (`case-lauriers.png`,
+ * plus large que haut) : à trois par rangée, sur un téléphone étroit, il
+ * tombe sous les cent points et sa plaque d'or ne porte plus son prix. Deux
+ * colonnes laissent chaque carte assez large pour être lue, et la grille
+ * s'empile sous le rayon plutôt que de glisser à l'horizontale — un rayon
+ * qui défile cache la moitié de ses prix, et un prix caché ne se compare pas.
+ */
+const PACK_COLUMNS = 2;
+
+/**
+ * La gouttière entre deux colonnes, EN POURCENTAGE de la grille.
+ *
+ * ⚠️ Elle est retirée de la largeur des cases, pas ajoutée autour d'elles.
+ * React Native n'a pas de `calc()` : deux cases à « 50 % » PLUS une
+ * gouttière font plus de 100 %, et `flexWrap` les renvoie à la ligne l'une
+ * après l'autre — la grille retombe alors sur une seule colonne, sans rien
+ * signaler. D'où la largeur calculée ci-dessous, et l'écart rendu par
+ * `justifyContent: 'space-between'` plutôt que par un `gap` horizontal.
+ */
+const PACK_GUTTER = 4;
+const PACK_CELL_WIDTH = `${(100 - PACK_GUTTER * (PACK_COLUMNS - 1)) / PACK_COLUMNS}%` as const;
 
 /**
  * Le cadre d'un paquet de lauriers, et les deux repères posés dessus.
@@ -81,12 +109,14 @@ const PACK_PRICE = { left: '11.5%', right: '8.6%', top: '64.2%', bottom: '12.6%'
  * marchand. Le prix reste affiché — c'est lui qui décide de la place que la
  * carte occupera — mais rien ne se passe au toucher.
  */
-function LaurelPackCard({ pack, width }: { pack: LaurelPack; width: number }) {
-  // Une hauteur EN POINTS, pas `aspectRatio` : les repères ci-dessus sont
-  // posés en pourcentages, qui ont besoin d'une hauteur déjà connue.
-  const height = width / PACK_ASPECT;
+function LaurelPackCard({ pack }: { pack: LaurelPack }) {
   return (
-    <View style={{ width, height }}>
+    // La carte prend la largeur de sa case et se donne sa hauteur par
+    // `aspectRatio` : dans une grille, la largeur vient du parent et n'est
+    // plus connue d'avance. Les repères posés dessus restent en pourcentages
+    // — Yoga résout la hauteur pendant la mise en page, donc les enfants
+    // absolus la trouvent déjà faite.
+    <View style={styles.packCard}>
       <Image
         source={ART.caseLauriers}
         resizeMode="stretch"
@@ -120,23 +150,12 @@ function LaurelPackCard({ pack, width }: { pack: LaurelPack; width: number }) {
   );
 }
 
-/** Les trois paliers montrés en rayon : l'appel, le courant, le mis en avant. */
-const SHOP_LAUREL_PACK_IDS = ['petit', 'moyen', 'genereux'] as const;
-
-function shopLaurelPacks(): LaurelPack[] {
-  return SHOP_LAUREL_PACK_IDS.map((id) => LAUREL_PACKS.find((pack) => pack.id === id)).filter(
-    (pack): pack is LaurelPack => pack !== undefined,
-  );
-}
-
 interface Props {
   state: Progression;
-  onBuyCharacter: (characterId: CharacterId) => void;
   onBuySkin: (skinId: string) => void;
 }
 
-export function ShopTab({ state, onBuyCharacter, onBuySkin }: Props) {
-  const characters = CHARACTER_ORDER.filter((id) => !ownsCharacter(state, id));
+export function ShopTab({ state, onBuySkin }: Props) {
   // ⚠️ La vitrine montre TOUTES ses pièces, même celles d'un dieu que le
   // joueur n'a pas encore : une vitrine à une seule carte n'est plus une
   // vitrine. Seule une parure DÉJÀ possédée disparaît (règle du rayon).
@@ -170,54 +189,16 @@ export function ShopTab({ state, onBuyCharacter, onBuySkin }: Props) {
           côte à côte, et au-delà de trois une case n'est plus assez large
           pour porter son montant. Les paliers intermédiaires restent dans
           `LAUREL_PACKS` — ils serviront à une page de paquets à part. */}
-      {/* La rangée glisse à l'horizontale : les cadres gravés ne se laissent
-          pas tasser à un tiers d'écran sans que leur couronne et leur plaque
-          deviennent illisibles. Une carte et demie tient dans le cadre, ce
-          qui montre à la fois le paquet d'appel et qu'il y en a d'autres. */}
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        snapToInterval={PACK_CARD_WIDTH + SPACE.md}
-        decelerationRate="fast"
-        contentContainerStyle={styles.packRail}
-        nestedScrollEnabled
-      >
-        {shopLaurelPacks().map((pack) => (
-          <LaurelPackCard key={pack.id} pack={pack} width={PACK_CARD_WIDTH} />
+      {/* Les SIX paliers du catalogue, du plus petit au plus gros, dans
+          l'ordre où `LAUREL_PACKS` les écrit : une échelle se lit de bas en
+          haut, et la trier autrement ferait mentir la comparaison des prix. */}
+      <View style={styles.packGrid}>
+        {LAUREL_PACKS.map((pack) => (
+          <View key={pack.id} style={styles.packCell}>
+            <LaurelPackCard pack={pack} />
+          </View>
         ))}
-      </ScrollView>
-
-      {characters.length > 0 && (
-        <>
-          <SectionTitle>Divinités</SectionTitle>
-          {characters.map((id) => {
-            const character = characterById(id);
-            const price = characterPrice(id);
-            return (
-              <Card key={id} style={styles.row}>
-                <GodBadge color={character.appearance.color} accent={character.appearance.accent} size={44} />
-                <View style={styles.rowText}>
-                  <Text style={styles.rowTitle} numberOfLines={1}>
-                    {character.label}
-                  </Text>
-                  <Text style={styles.rowSub} numberOfLines={1}>
-                    {character.domain}
-                  </Text>
-                </View>
-                <Button
-                  testID={`buy-${id}`}
-                  label={price.toLocaleString('fr-FR')}
-                  variant="primary"
-                  disabled={state.gold < price}
-                  onPress={() => onBuyCharacter(id)}
-                  hint={`Acheter ${character.label} pour ${price} or`}
-                  style={styles.rowButton}
-                />
-              </Card>
-            );
-          })}
-        </>
-      )}
+      </View>
 
       {skins.length > 0 && (
         <>
@@ -265,33 +246,11 @@ export function ShopTab({ state, onBuyCharacter, onBuySkin }: Props) {
         </>
       )}
 
-      {characters.length === 0 && skins.length === 0 && (
+      {skins.length === 0 && (
         <Text style={styles.empty}>
-          Tout le panthéon est à toi, et toutes ses parures. Il ne reste qu'à courir.
+          Toutes les parures sont à toi. Il ne reste qu'à courir.
         </Text>
       )}
-
-      <SectionTitle>Conversion</SectionTitle>
-      <Card style={styles.convert}>
-        <Text style={styles.convertText}>
-          Changer de l'or contre des lauriers ouvrira avec les achats.
-        </Text>
-        <View style={styles.convertRow}>
-          <View style={styles.convertFrom}>
-            <Coin size={16} />
-            <Text style={styles.convertValue}>1 000</Text>
-          </View>
-          <Text style={styles.convertArrow}>➜</Text>
-          <View style={styles.convertFrom}>
-            <Laurel size={16} />
-            <Text style={styles.convertValue}>50</Text>
-          </View>
-        </View>
-      </Card>
-
-      <Text style={styles.note}>
-        L'or se gagne en jouant : un pour trois fidèles convertis.
-      </Text>
     </ScrollView>
   );
 }
@@ -307,7 +266,19 @@ const styles = StyleSheet.create({
   offerName: { ...TYPE.label, fontSize: 11, color: COLORS.text },
   offerDetail: { ...TYPE.body, fontSize: 12, color: COLORS.muted, marginTop: 2, lineHeight: 17 },
 
-  packRail: { gap: SPACE.md, paddingHorizontal: SPACE.sm },
+  // ⚠️ Les cases sont posées à la LARGEUR, pas en `flex: 1` : une dernière
+  // rangée incomplète étirerait sa seule carte sur toute la ligne, et la
+  // grille perdrait son alignement. `flexWrap` fait les rangées tout seul,
+  // et `space-between` l'écart entre colonnes (voir `PACK_GUTTER`) ; seul
+  // l'écart des rangées est un vrai `rowGap`, en points.
+  packGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    rowGap: SPACE.sm,
+  },
+  packCell: { width: PACK_CELL_WIDTH },
+  packCard: { width: '100%', aspectRatio: PACK_ASPECT },
   packFrame: { width: '100%', height: '100%' },
   // Le montant est CALÉ À GAUCHE, au bord droit de la couronne gravée : il
   // part donc du même point qu'il ait trois chiffres ou quatre. Centré,
@@ -321,11 +292,6 @@ const styles = StyleSheet.create({
   packPrice: { ...TYPE.price, fontSize: 18, lineHeight: 22, color: COLORS.onGold },
   packPriceOff: { color: COLORS.muted },
 
-  row: { flexDirection: 'row', alignItems: 'center', gap: SPACE.md },
-  rowText: { flex: 1, minWidth: 0 },
-  rowTitle: { ...TYPE.title, fontSize: 16, color: COLORS.text },
-  rowSub: { ...TYPE.body, fontSize: 12, color: COLORS.muted },
-  rowButton: { minWidth: 92 },
 
   // La rangée glisse à l'horizontale : une carte à la fois, en plein cadre,
   // plutôt qu'une grille qui aurait tassé les cadres de rareté au point de
@@ -361,12 +327,4 @@ const styles = StyleSheet.create({
 
   empty: { ...TYPE.body, color: COLORS.text, textAlign: 'center', lineHeight: 20 },
 
-  convert: { gap: SPACE.sm },
-  convertText: { ...TYPE.body, fontSize: 12, color: COLORS.muted, lineHeight: 17 },
-  convertRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: SPACE.lg },
-  convertFrom: { flexDirection: 'row', alignItems: 'center', gap: SPACE.xs },
-  convertValue: { ...TYPE.price, fontSize: 14, color: COLORS.text },
-  convertArrow: { fontSize: 16, color: COLORS.frameDark },
-
-  note: { ...TYPE.body, fontSize: 12, color: COLORS.muted, textAlign: 'center', lineHeight: 17 },
 });
